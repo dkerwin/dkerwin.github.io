@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: linux | linuxaddicted.de]]></title>
+  <link href="http://dkerwin.github.io/blog/categories/linux/atom.xml" rel="self"/>
+  <link href="http://dkerwin.github.io/"/>
+  <updated>2013-05-31T18:27:46+02:00</updated>
+  <id>http://dkerwin.github.io/</id>
+  <author>
+    <name><![CDATA[Daniel Kerwin]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Qualcomm MSM6275 UMTS Vodafone card]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/02/qualcomm-msm6275-umts-vodafone-card/"/>
+    <updated>2008-12-02T13:25:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/02/qualcomm-msm6275-umts-vodafone-card</id>
+    <content type="html"><![CDATA[<h2>Preferences</h2>
+
+<p>First of all make sure UMTS card is recognized by your system. You need PCMCIA support enabled in your kernel. If you compiled it as modules load the modules.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Device check </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>deathstar ~ # lspci
+</span><span class='line'>&hellip;
+</span><span class='line'>04:00.0 Network controller: Option N.V. Qualcomm MSM6275 UMTS chip
+</span><span class='line'>&hellip;</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2>Nozomi &ndash; card access</h2>
+
+<p>Download und build the Nozomi kernel module. You can get it <strong><a href="http://www.pharscape.org/component/option,com_forum/Itemid,69/page,viewforum/f,5/">here</a></strong></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Nozomi install </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>cd nozomi_2.21alpha_060917
+</span><span class='line'>mkdir -p /lib/modules/KERNEL_VERSION/kernel/drivers/pci/hotplug (if it doesn&rsquo;t exists)
+</span><span class='line'>make
+</span><span class='line'>depmod
+</span><span class='line'>modprobe nozomi</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>After you succeeded in loading the nozomi module you should see something like this in dmesg:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>dmesg </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>nozomi 0000:04:00.0: Nozomi driver nozomi_tty
+</span><span class='line'>Initializing Nozomi driver 2.21alpha (build date: Jun  9 2008 15:00:29)
+</span><span class='line'>nozomi 0000:04:00.0: Version of card: 3
+</span><span class='line'>nozomi 0000:04:00.0: Initialization OK!</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2>PPP Configuration</h2>
+
+<p>You have to supply the PIN to your SIM-card. There are two ways to accomplish this:</p>
+
+<ul>
+<li>Add <code>AT+CPIN=MY_SIM_PIN</code> to your chat script</li>
+<li>Use a little Perl script (for example if you use a PIN app)</li>
+</ul>
+
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Perl helper </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="sr">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;h1&gt;</span><span class="o">!</span><span class="sr">/usr/</span><span class="n">bin</span><span class="sr">/perl&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;</span><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span><span class="sr">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;</span><span class="nv">$SIG</span><span class="p">{</span><span class="n">ALRM</span><span class="p">}</span> <span class="o">=</span> <span class="k">sub </span><span class="p">{</span> <span class="nb">die</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">timeout:</span> <span class="nb">no</span> <span class="n">response</span> <span class="n">from</span> <span class="n">modem</span> <span class="nv">$modem</span><span class="o">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;);</span> <span class="p">};</span><span class="sr">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;</span><span class="k">my</span> <span class="err">§</span><span class="n">pin</span>   <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'><span class="k">my</span> <span class="nv">$modem</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">lsquo</span><span class="p">;</span><span class="sr">/dev/</span><span class="n">noz0</span><span class="o">&amp;</span><span class="n">rsquo</span><span class="p">;;</span><span class="sr">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;</span><span class="nb">open</span><span class="p">(</span><span class="n">MODEM</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="o">+&amp;</span><span class="ow">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;,</span> <span class="nv">$modem</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">die</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">Failed</span> <span class="n">to</span> <span class="nb">open</span> <span class="n">modem</span> <span class="nv">$modem:</span> <span class="vg">$!</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;);</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">MODEM</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">AT</span><span class="o">+</span><span class="n">CPIN</span><span class="o">=\&amp;</span><span class="n">rdquo</span><span class="p">;</span><span class="nv">$pin</span><span class="o">\&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="o">\</span><span class="n">n</span><span class="o">\</span><span class="n">r</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;);</span>
+</span><span class='line'><span class="k">while</span> <span class="p">(</span><span class="sr">&lt;MODEM&gt;</span><span class="p">)</span> <span class="p">{</span><span class="sr">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;pre&gt;&lt;code&gt;</span><span class="k">if</span> <span class="p">(</span><span class="sr">m/OK/</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">close</span><span class="p">(</span><span class="n">MODEM</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;PIN accepted\n&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="sr">m/ERROR/</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">close</span><span class="p">(</span><span class="n">MODEM</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;PIN rejected\n&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="sr">&lt;/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;</span><span class="p">}</span><span class="sr">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;</span><span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Now it&rsquo;s time to create the PPP config and chat scripts.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/etc/ppp/peers/umts </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Most GPRS phones don&rsquo;t reply to LCP echo&rsquo;s&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>lcp-echo-failure 0
+</span><span class='line'>lcp-echo-interval 0&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Keep pppd attached to the terminal:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Comment this to get daemon mode pppd&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>nodetach&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Debug info from pppd:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Comment this off, if you don&rsquo;t need more info&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>debug&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Connect script:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>scripts to initialize the UMTS modem and start the connection,&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>connect /etc/ppp/peers/umts-connect-chat&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Disconnect script:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>AT commands used to &lsquo;hangup&rsquo; the UMTS connection.&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>disconnect /etc/ppp/peers/umts-disconnect-chat&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Serial device to which the UMTS card is connected:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>/dev/noz0&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Serial port line speed&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>115200&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Hardware flow control:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Use hardware flow control with cable, Bluetooth and USB but not with IrDA.&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>crtscts  # serial cable, Bluetooth and USB, on some occations with IrDA too&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>nocrtscts # IrDA&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Ignore carrier detect signal from the modem:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>local&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>IP addresses:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>&ndash; accept peers idea of our local address and set address peer as 10.0.0.1&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>(any address would do, since IPCP gives 0.0.0.0 to it)&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>&ndash; if you use the 10. network at home or something and pppd rejects it,&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>change the address to something else&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>0.0.0.0:0.0.0.0&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>pppd must not propose any IP address to the peer!&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>noipdefault&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Accept peers idea of our local address&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>ipcp-accept-local&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Add the ppp interface as default route to the IP routing table&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>defaultroute&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>DNS servers from the phone:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>some phones support this, some don&rsquo;t.&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>usepeerdns&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ppp compression:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ppp compression may be used between the phone and the pppd, but the&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>serial connection is usually not the bottleneck in GPRS, so the&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>compression is useless (and with some phones need to disabled before&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>the LCP negotiations succeed).&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>novj
+</span><span class='line'>nobsdcomp
+</span><span class='line'>novjccomp
+</span><span class='line'>nopcomp
+</span><span class='line'>noaccomp&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>The phone is not required to authenticate:&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>noauth
+</span><span class='line'>mtu 1500
+</span><span class='line'>mru 1500</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/etc/ppp/peers/umts-connect-chat </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>exec chat             \
+</span><span class='line'>  TIMEOUT   5       \
+</span><span class='line'>  ECHO    ON        \
+</span><span class='line'>  ABORT   &lsquo;\nBUSY\r&rsquo;      \
+</span><span class='line'>  ABORT   &lsquo;\nERROR\r&rsquo;     \
+</span><span class='line'>  ABORT   &lsquo;\nNO ANSWER\r&rsquo;     \
+</span><span class='line'>  ABORT   &lsquo;\nNO CARRIER\r&rsquo;    \
+</span><span class='line'>  ABORT   &lsquo;\nNO DIALTONE\r&rsquo;   \
+</span><span class='line'>  ABORT   &lsquo;\nRINGING\r\n\r\nRINGING\r&rsquo;  \
+</span><span class='line'>  &lsquo;&rsquo;    \rAT        \
+</span><span class='line'>  TIMEOUT   12        \
+</span><span class='line'>  SAY   &ldquo;Press CTRL-C to close the connection at any stage!&rdquo;  \
+</span><span class='line'>  SAY   &ldquo;\ndefining PDP context&hellip;\n&rdquo; \
+</span><span class='line'>  OK    ATH       \
+</span><span class='line'>  OK    ATE1        \
+</span><span class='line'>  OK    &lsquo;AT+CGDCONT=1,&ldquo;IP&rdquo;,&ldquo;web.vodafone.de&rdquo;,&ldquo;&rdquo;,0,0&rsquo;  \
+</span><span class='line'>  OK    ATD*99#       \
+</span><span class='line'>  TIMEOUT   22        \
+</span><span class='line'>  SAY   &ldquo;\nwaiting for connect&hellip;\n&rdquo;  \
+</span><span class='line'>  CONNECT   &ldquo;&rdquo;        \
+</span><span class='line'>  SAY   &ldquo;\nConnected.&rdquo; \
+</span><span class='line'>  SAY   &ldquo;\nIf the following ppp negotiations fail,\n&rdquo; \
+</span><span class='line'>  SAY   &ldquo;try restarting the phone.\n&rdquo;</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/etc/ppp/peers/umts-disconnect-chat </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>exec /usr/sbin/chat -V -s -S  \
+</span><span class='line'>ABORT   &ldquo;BUSY&rdquo;    \
+</span><span class='line'>ABORT   &ldquo;ERROR&rdquo;   \
+</span><span class='line'>ABORT   &ldquo;NO DIALTONE&rdquo; \
+</span><span class='line'>SAY   &ldquo;\nSending break to the modem\n&rdquo;  \
+</span><span class='line'>&ldquo;&rdquo;    &ldquo;\K&rdquo;    \
+</span><span class='line'>&ldquo;&rdquo;    &ldquo;+++ATH&rdquo;  \
+</span><span class='line'>SAY   &ldquo;\nPDP context detached\n&rdquo;</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2>Time to go online</h2>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Connect </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>deathstar ~ # pppd call gprs
+</span><span class='line'>Press CTRL-C to close the connection at any stage!
+</span><span class='line'>defining PDP context&hellip;
+</span><span class='line'>AT
+</span><span class='line'>OK
+</span><span class='line'>ATH
+</span><span class='line'>OK
+</span><span class='line'>ATE1
+</span><span class='line'>OK
+</span><span class='line'>AT+CGDCONT=1,&ldquo;IP&rdquo;,&ldquo;web.vodafone.de&rdquo;,&ldquo;&rdquo;,0,0
+</span><span class='line'>OK
+</span><span class='line'>waiting for connect&hellip;
+</span><span class='line'>ATD*99#
+</span><span class='line'>CONNECT
+</span><span class='line'>Connected.
+</span><span class='line'>If the following ppp negotiations fail,
+</span><span class='line'>try restarting the phone.
+</span><span class='line'>Serial connection established.
+</span><span class='line'>using channel 1
+</span><span class='line'>Using interface ppp0
+</span><span class='line'>Connect: ppp0 &lt;&mdash;> /dev/noz0
+</span><span class='line'>sent [LCP ConfReq id=0x1 &lt;asyncmap 0x0> &lt;magic 0x9aa17e40>]
+</span><span class='line'>rcvd [LCP ConfReq id=0x0 &lt;asyncmap 0x0> &lt;auth chap MD5> &lt;magic 0x90ae7a2e> &lt;pcomp> &lt;accomp>]
+</span><span class='line'>No auth is possible
+</span><span class='line'>sent [LCP ConfRej id=0x0 &lt;auth chap MD5> &lt;pcomp> &lt;accomp>]
+</span><span class='line'>rcvd [LCP ConfAck id=0x1 &lt;asyncmap 0x0> &lt;magic 0x9aa17e40>]
+</span><span class='line'>rcvd [LCP ConfReq id=0x1 &lt;asyncmap 0x0> &lt;magic 0x90ae7a2e>]
+</span><span class='line'>sent [LCP ConfAck id=0x1 &lt;asyncmap 0x0> &lt;magic 0x90ae7a2e>]
+</span><span class='line'>sent [CCP ConfReq id=0x1 &lt;deflate 15> &lt;deflate(old#) 15>]
+</span><span class='line'>sent [IPCP ConfReq id=0x1 &lt;addr 0.0.0.0> &lt;ms-dns1 0.0.0.0> &lt;ms-dns3 0.0.0.0>]
+</span><span class='line'>rcvd [LCP DiscReq id=0x2 magic=0x90ae7a2e]
+</span><span class='line'>rcvd [LCP ProtRej id=0x3 80 fd 01 01 00 0c 1a 04 78 00 18 04 78 00]
+</span><span class='line'>rcvd [IPCP ConfNak id=0x1 &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14> &lt;ms-wins 10.11.12.13> &lt;ms-wins 10.11.12.14>]
+</span><span class='line'>sent [IPCP ConfReq id=0x2 &lt;addr 0.0.0.0> &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14>]
+</span><span class='line'>rcvd [IPCP ConfNak id=0x2 &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14> &lt;ms-wins 10.11.12.13> &lt;ms-wins 10.11.12.14>]
+</span><span class='line'>sent [IPCP ConfReq id=0x3 &lt;addr 0.0.0.0> &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14>]
+</span><span class='line'>rcvd [IPCP ConfNak id=0x3 &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14> &lt;ms-wins 10.11.12.13> &lt;ms-wins 10.11.12.14>]
+</span><span class='line'>sent [IPCP ConfReq id=0x4 &lt;addr 0.0.0.0> &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14>]
+</span><span class='line'>rcvd [IPCP ConfReq id=0x0]
+</span><span class='line'>sent [IPCP ConfNak id=0x0 &lt;addr 0.0.0.0>]
+</span><span class='line'>rcvd [IPCP ConfNak id=0x4 &lt;addr 77.24.36.100> &lt;ms-dns1 139.7.30.125> &lt;ms-dns3 139.7.30.126>]
+</span><span class='line'>sent [IPCP ConfReq id=0x5 &lt;addr 77.24.36.100> &lt;ms-dns1 139.7.30.125> &lt;ms-dns3 139.7.30.126>]
+</span><span class='line'>rcvd [IPCP ConfAck id=0x5 &lt;addr 77.24.36.100> &lt;ms-dns1 139.7.30.125> &lt;ms-dns3 139.7.30.126>]
+</span><span class='line'>rcvd [IPCP ConfReq id=0x1]
+</span><span class='line'>sent [IPCP ConfAck id=0x1]
+</span><span class='line'>Could not determine remote IP address: defaulting to 10.64.64.64
+</span><span class='line'>local  IP address 77.24.36.100
+</span><span class='line'>remote IP address 10.64.64.64
+</span><span class='line'>primary   DNS address 139.7.30.125
+</span><span class='line'>secondary DNS address 139.7.30.126
+</span><span class='line'>Script /etc/ppp/ip-up started (pid 8494)
+</span><span class='line'>Script /etc/ppp/ip-up finished (pid 8494), status = 0x1</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>That&rsquo;s it!</p>
+]]></content>
+  </entry>
+  
+</feed>

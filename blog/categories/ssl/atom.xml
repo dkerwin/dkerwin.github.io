@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ssl | linuxaddicted.de]]></title>
+  <link href="http://dkerwin.github.io/blog/categories/ssl/atom.xml" rel="self"/>
+  <link href="http://dkerwin.github.io/"/>
+  <updated>2013-05-31T18:27:46+02:00</updated>
+  <id>http://dkerwin.github.io/</id>
+  <author>
+    <name><![CDATA[Daniel Kerwin]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[BigIP client certificates]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/02/bigip-client-certificates/"/>
+    <updated>2008-12-02T11:14:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/02/bigip-client-certificates</id>
+    <content type="html"><![CDATA[<p>This howto will show you how to use client certificates to authenticate against applications hosted by a BigIP loadbalancer. You may find this howto (or parts of it) on <a href="http://ask.f5.com">ask.f5.com</a> as they was no documentation before on this topic. I forwarded it to F5 some time ago. <strong>This is the only way to use client certificates without purchasing addon modules from F5.</strong></p>
+
+<h3>Purpose</h3>
+
+<p>If you host a website/application which should only be accessible by some users you you may have already thought about client certificates. This makes brute force attacks against login panels impossible.
+This increases the overall application security by adding another layer a user must pass.</p>
+
+<p>The mapping between certificates and access rights is based on a LDAP directory.</p>
+
+<h3>Overview</h3>
+
+<p>The loadbalancer reads the CN from the client certificate and searches the defined group for the virtual server for a matching entry. The loadbalancer verifies CA and CRL&rsquo;s before the lookup takes place.</p>
+
+<p><img class="center" src="/images/f5_ldap_auth.png" width="388" height="339" title="BigIP Certificate Auth" ></p>
+
+<h3>LDAP Setup</h3>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Example LDAP tree </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>dc=company,dc=com
+</span><span class='line'>   /         \
+</span><span class='line'>  /           \
+</span><span class='line'>&hellip;      ou=datacenter&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>       /        \
+</span><span class='line'>      /          \
+</span><span class='line'>    ...       ou=webauth
+</span><span class='line'>               /    \
+</span><span class='line'>              /      \
+</span><span class='line'>        ou=users    ou=groups
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h4>User &amp; Group LDIF</h4>
+
+<p>Here are two LDIF examples for users and groups:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>User LDIF </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dn: cn=Example User,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>cn: Example User
+</span><span class='line'>sn: Example User
+</span><span class='line'>objectClass: person
+</span><span class='line'>description: It&rsquo;s just a example user</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Group LDIF </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dn: cn=Example Group,ou=groups,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>cn: Example Group
+</span><span class='line'>objectClass: posixGroup
+</span><span class='line'>description: Group is allowed to connect to BigIP&rsquo;s VHOST secure.company.com
+</span><span class='line'>memberUid: cn=Example User,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>memberUid: cn=Example User No2,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>gidNumber: 145</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The &ldquo;memberUid&rdquo; has to match exactly the certificates CN because this is the key the BigIP is looking for.</p>
+
+<h3>BigIP Configuration</h3>
+
+<h4>Authentication Configuration</h4>
+
+<p>As a first step we create a new &ldquo;Authentication Configuration&rdquo;. Just open the web frontend and navigate to:</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>Authentication</code> &rarr; <code>Configuration</code></p>
+
+<p>You have to create a new config for every virtual host you want to secure. This is force by the LDAP group used because every config can only use one group. Here&rsquo;s a example configuration:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Authentication Configuration </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Parameter        | Value&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Hosts            | 1.2.3.4
+</span><span class='line'>Search Type      | User
+</span><span class='line'>User Base        | DNou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>User Key         | cn
+</span><span class='line'>Admin DN         | DN for binding
+</span><span class='line'>Admin Password   | Bind password
+</span><span class='line'>Group Base DN    | ou=groups,ou=webauth,ou=datacenter,dc=company,dcc=com
+</span><span class='line'>Group Key        | cn
+</span><span class='line'>Group Member Key | memberUid
+</span><span class='line'>Valid Groups     | Corresponding LDAP group</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h3>Authentication Profile</h3>
+
+<p>The next step is to create a profile which inherits the new created config. You need a profile for every configuration. Navigate to</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>Authentication</code> &rarr; <code>Profiles</code></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Authentication Profile </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Parameter      | Value&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Type           | SSL Client Certificate LDAP
+</span><span class='line'>Parent Profile | ssl_cc_ldap
+</span><span class='line'>Mode           | Enabled
+</span><span class='line'>Configuration  | NAME OF CONF JUST CREATED</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h3>CA Upload</h3>
+
+<p>If your CA certificate(s) have not been installed it&rsquo;s time to do so.</p>
+
+<p><code>Local Traffic</code> &rarr; <code>SSL Certificates</code> &rarr; <code>Import</code></p>
+
+<h3>SSL Profiles</h3>
+
+<p>To use SSL (without client certificates too) you need a SSL profile. Navigate to</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>SSL</code> &rarr; <code>Client</code></p>
+
+<p>Create a new profile based on &ldquo;clientssl&rdquo; or one of your already defined profiles.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>SSL Client </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Parameter                          | Value&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Chain                              | CompanyBundle
+</span><span class='line'>Trusted Certificate Authorities    | CompanyBundle
+</span><span class='line'>Client Certificate                 | require
+</span><span class='line'>Frequency                          | always
+</span><span class='line'>Advertised Certificate Authorities | CompanyBundle</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h3>Virtual Host Configuration</h3>
+
+<p>You may create a new virtual host or modify a existing host. Navigate here</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Virtual Servers</code></p>
+
+<p>Modify the following parameters (if you already used SSL in this vhost):</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Virtual Servers </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Parameter               | Value&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>SSL Profile (Client)    | Profile created earlier
+</span><span class='line'>Authentication Profiles | Profile created earlier</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h3>That&rsquo;s it!</h3>
+
+<p>Import your client certificates to your browser and enjoy your secure connection.</p>
+
+<p>If you have any trouble don&rsquo;t hesitate to contact me: daniel {A_T} linuxaddicted {D_O_T} de</p>
+]]></content>
+  </entry>
+  
+</feed>

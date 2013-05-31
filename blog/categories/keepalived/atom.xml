@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: keepalived | linuxaddicted.de]]></title>
+  <link href="http://dkerwin.github.io/blog/categories/keepalived/atom.xml" rel="self"/>
+  <link href="http://dkerwin.github.io/"/>
+  <updated>2013-05-31T18:27:46+02:00</updated>
+  <id>http://dkerwin.github.io/</id>
+  <author>
+    <name><![CDATA[Daniel Kerwin]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[OpenVPN active/active cluster]]></title>
+    <link href="http://dkerwin.github.io/blog/2010/02/01/openvpn-active-slash-active-cluster/"/>
+    <updated>2010-02-01T20:49:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2010/02/01/openvpn-active-slash-active-cluster</id>
+    <content type="html"><![CDATA[<p>This is a small howto explaining how to run a active/active Cluster (keeplaived) setup with OpenVPN. The active/active reflects that both cluster nodes run the same OpenVPN instance. In server mode this setup leads to routing problems as both nodes have the tunnel route added during startup (not after connect). This results in routing trouble as i needed the passive node to access the VPN tunnel via the active node. This is how i solved it:</p>
+
+<!--more-->
+
+
+<h2>Routing setup</h2>
+
+<p>Both firewall nodes have a static route which forwards tunnel traffic to one of the internal cluster IP&rsquo;s. The metric for this route is 2 so a active tunnel is preferred over that static route.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">routes_eth2</span><span class="o">=(</span> &amp;ldquo;192.168.44.0/24 via 192.168.20.254 metric 2&amp;rdquo; <span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>It doesn&rsquo;t matter which node is active and gets the VPN connects as the other node has the right routing entries.</p>
+
+<h2>OpenVPN configuration</h2>
+
+<p>This setup requires the use of sudo or to run the OpenVPN daemon as root (sudo, sudo, sudo!!!). First we disable to automatically adding of routes and specify scripts for client-connect and client-disconnect. Dont forget to set script security.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>route-noexec
+</span><span class='line'>client-connect /etc/openvpn/cluster_routing.sh
+</span><span class='line'>client-disconnect /etc/openvpn/cluster_routing.sh
+</span><span class='line'>script-security 3
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2>cluster_routing.sh</h2>
+
+<p>This is a simple version of the script but it should be sufficient to work in most scenarios.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;!/bin/bash&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;This is useful <span class="k">for </span>debugging and to get the available env vars&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;exec &gt; /tmp/ovpn.debug.<span class="nv">$$</span> 2Y&amp;1; <span class="nb">set</span> -x&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;if <span class="o">[</span> &amp;ldquo;<span class="k">${</span><span class="nv">script_type</span><span class="k">}</span>&amp;rdquo; <span class="o">==</span> &amp;ldquo;client-connect&amp;rdquo; <span class="o">]</span>;
+</span><span class='line'><span class="k">then</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;/usr/bin/sudo /sbin/route add -net <span class="k">${</span><span class="nv">route_network_1</span><span class="k">}</span>/24 gw <span class="k">${</span><span class="nv">route_vpn_gateway</span><span class="k">}</span>
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;else&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;/usr/bin/sudo /sbin/route del -net <span class="k">${</span><span class="nv">route_network_1</span><span class="k">}</span>/24 gw <span class="k">${</span><span class="nv">route_vpn_gateway</span><span class="k">}</span>
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;fi&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;exit 0
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>This script adds and removes the needed route to get a operational tunnel.</p>
+]]></content>
+  </entry>
+  
+</feed>

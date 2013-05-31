@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ldap | linuxaddicted.de]]></title>
+  <link href="http://dkerwin.github.io/blog/categories/ldap/atom.xml" rel="self"/>
+  <link href="http://dkerwin.github.io/"/>
+  <updated>2013-05-31T18:27:46+02:00</updated>
+  <id>http://dkerwin.github.io/</id>
+  <author>
+    <name><![CDATA[Daniel Kerwin]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[BigIP client certificates]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/02/bigip-client-certificates/"/>
+    <updated>2008-12-02T11:14:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/02/bigip-client-certificates</id>
+    <content type="html"><![CDATA[<p>This howto will show you how to use client certificates to authenticate against applications hosted by a BigIP loadbalancer. You may find this howto (or parts of it) on <a href="http://ask.f5.com">ask.f5.com</a> as they was no documentation before on this topic. I forwarded it to F5 some time ago. <strong>This is the only way to use client certificates without purchasing addon modules from F5.</strong></p>
+
+<h3>Purpose</h3>
+
+<p>If you host a website/application which should only be accessible by some users you you may have already thought about client certificates. This makes brute force attacks against login panels impossible.
+This increases the overall application security by adding another layer a user must pass.</p>
+
+<p>The mapping between certificates and access rights is based on a LDAP directory.</p>
+
+<h3>Overview</h3>
+
+<p>The loadbalancer reads the CN from the client certificate and searches the defined group for the virtual server for a matching entry. The loadbalancer verifies CA and CRL&rsquo;s before the lookup takes place.</p>
+
+<p><img class="center" src="/images/f5_ldap_auth.png" width="388" height="339" title="BigIP Certificate Auth" ></p>
+
+<h3>LDAP Setup</h3>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Example LDAP tree </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>dc=company,dc=com
+</span><span class='line'>   /         \
+</span><span class='line'>  /           \
+</span><span class='line'>&hellip;      ou=datacenter&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>       /        \
+</span><span class='line'>      /          \
+</span><span class='line'>    ...       ou=webauth
+</span><span class='line'>               /    \
+</span><span class='line'>              /      \
+</span><span class='line'>        ou=users    ou=groups
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h4>User &amp; Group LDIF</h4>
+
+<p>Here are two LDIF examples for users and groups:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>User LDIF </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dn: cn=Example User,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>cn: Example User
+</span><span class='line'>sn: Example User
+</span><span class='line'>objectClass: person
+</span><span class='line'>description: It&rsquo;s just a example user</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Group LDIF </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dn: cn=Example Group,ou=groups,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>cn: Example Group
+</span><span class='line'>objectClass: posixGroup
+</span><span class='line'>description: Group is allowed to connect to BigIP&rsquo;s VHOST secure.company.com
+</span><span class='line'>memberUid: cn=Example User,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>memberUid: cn=Example User No2,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>gidNumber: 145</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The &ldquo;memberUid&rdquo; has to match exactly the certificates CN because this is the key the BigIP is looking for.</p>
+
+<h3>BigIP Configuration</h3>
+
+<h4>Authentication Configuration</h4>
+
+<p>As a first step we create a new &ldquo;Authentication Configuration&rdquo;. Just open the web frontend and navigate to:</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>Authentication</code> &rarr; <code>Configuration</code></p>
+
+<p>You have to create a new config for every virtual host you want to secure. This is force by the LDAP group used because every config can only use one group. Here&rsquo;s a example configuration:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Authentication Configuration </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Parameter        | Value&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Hosts            | 1.2.3.4
+</span><span class='line'>Search Type      | User
+</span><span class='line'>User Base        | DNou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>User Key         | cn
+</span><span class='line'>Admin DN         | DN for binding
+</span><span class='line'>Admin Password   | Bind password
+</span><span class='line'>Group Base DN    | ou=groups,ou=webauth,ou=datacenter,dc=company,dcc=com
+</span><span class='line'>Group Key        | cn
+</span><span class='line'>Group Member Key | memberUid
+</span><span class='line'>Valid Groups     | Corresponding LDAP group</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h3>Authentication Profile</h3>
+
+<p>The next step is to create a profile which inherits the new created config. You need a profile for every configuration. Navigate to</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>Authentication</code> &rarr; <code>Profiles</code></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Authentication Profile </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Parameter      | Value&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Type           | SSL Client Certificate LDAP
+</span><span class='line'>Parent Profile | ssl_cc_ldap
+</span><span class='line'>Mode           | Enabled
+</span><span class='line'>Configuration  | NAME OF CONF JUST CREATED</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h3>CA Upload</h3>
+
+<p>If your CA certificate(s) have not been installed it&rsquo;s time to do so.</p>
+
+<p><code>Local Traffic</code> &rarr; <code>SSL Certificates</code> &rarr; <code>Import</code></p>
+
+<h3>SSL Profiles</h3>
+
+<p>To use SSL (without client certificates too) you need a SSL profile. Navigate to</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>SSL</code> &rarr; <code>Client</code></p>
+
+<p>Create a new profile based on &ldquo;clientssl&rdquo; or one of your already defined profiles.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>SSL Client </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Parameter                          | Value&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>Chain                              | CompanyBundle
+</span><span class='line'>Trusted Certificate Authorities    | CompanyBundle
+</span><span class='line'>Client Certificate                 | require
+</span><span class='line'>Frequency                          | always
+</span><span class='line'>Advertised Certificate Authorities | CompanyBundle</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h3>Virtual Host Configuration</h3>
+
+<p>You may create a new virtual host or modify a existing host. Navigate here</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Virtual Servers</code></p>
+
+<p>Modify the following parameters (if you already used SSL in this vhost):</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Virtual Servers </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>Parameter               | Value&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p>SSL Profile (Client)    | Profile created earlier
+</span><span class='line'>Authentication Profiles | Profile created earlier</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h3>That&rsquo;s it!</h3>
+
+<p>Import your client certificates to your browser and enjoy your secure connection.</p>
+
+<p>If you have any trouble don&rsquo;t hesitate to contact me: daniel {A_T} linuxaddicted {D_O_T} de</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Postfix Relay based on OpenLDAP]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/10/27/postfix-relay-based-on-openldap/"/>
+    <updated>2008-10-27T14:01:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/10/27/postfix-relay-based-on-openldap</id>
+    <content type="html"><![CDATA[<p>This howto describes the configuration of a Postfix relay based on OpenLDAP. These are the features of the relay:</p>
+
+<ul>
+<li>User verification through LDAP</li>
+<li>Separation on internal and external users</li>
+<li>Greylisting</li>
+<li>User Relaying based on TLS and LDAP authentication</li>
+<li>Forwarding to local mailserver</li>
+</ul>
+
+
+<!--more-->
+
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/etc/postfix/main.cf </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Global settings&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;queue_directory <span class="o">=</span> /var/spool/postfix
+</span><span class='line'><span class="nv">command_directory</span> <span class="o">=</span> /usr/sbin
+</span><span class='line'><span class="nv">daemon_directory</span> <span class="o">=</span> /usr/lib/postfix
+</span><span class='line'><span class="nv">mail_owner</span> <span class="o">=</span> postfix
+</span><span class='line'><span class="nv">smtpd_banner</span> <span class="o">=</span> mail.company.com ESMTP MailRelay
+</span><span class='line'><span class="nv">sendmail_path</span> <span class="o">=</span> /usr/sbin/sendmail
+</span><span class='line'><span class="nv">newaliases_path</span> <span class="o">=</span> /usr/bin/newaliases
+</span><span class='line'><span class="nv">mailq_path</span> <span class="o">=</span> /usr/bin/mailq
+</span><span class='line'><span class="nv">setgid_group</span> <span class="o">=</span> postdrop
+</span><span class='line'><span class="nv">html_directory</span> <span class="o">=</span> /usr/share/doc/postfix-2.3.6/html
+</span><span class='line'><span class="nv">manpage_directory</span> <span class="o">=</span> /usr/share/man
+</span><span class='line'><span class="nv">sample_directory</span> <span class="o">=</span> /etc/postfix
+</span><span class='line'><span class="nv">readme_directory</span> <span class="o">=</span> /usr/share/doc/postfix-2.3.6/readme
+</span><span class='line'><span class="nv">home_mailbox</span> <span class="o">=</span> .maildir/
+</span><span class='line'><span class="nv">alias_database</span> <span class="o">=</span> <span class="nb">hash</span>:/etc/mail/aliases&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Internet and domain names&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;myhostname <span class="o">=</span> mail.company.com
+</span><span class='line'><span class="nv">mydomain</span> <span class="o">=</span> company.com&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Sending mail <span class="o">(</span><span class="nb">local</span><span class="o">)</span>&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;myorigin <span class="o">=</span> company.com&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Receiving mail&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;inet_interfaces <span class="o">=</span> all
+</span><span class='line'><span class="nv">proxy_interfaces</span> <span class="o">=</span>
+</span><span class='line'><span class="nv">mydestination</span> <span class="o">=</span>
+</span><span class='line'><span class="nv">local_recipient_maps</span> <span class="o">=</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;As incoming mail doesn&amp;rsquo;t terminate on the relay we have to remove the values from &amp;ldquo;mydestination&amp;rdquo;.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;That&amp;rsquo;s why &amp;ldquo;local_recipients&amp;rdquo; is <span class="nb">unset </span>as well.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Relay control&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;relay_domains <span class="o">=</span> company.com
+</span><span class='line'><span class="nv">relay_recipient_maps</span> <span class="o">=</span> proxy:ldap:/etc/postfix/ldap/relay_recipients.cf
+</span><span class='line'><span class="nv">mynetworks</span> <span class="o">=</span> 192.168.1.0/28&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;The relay_recipient_map contains the users that mail should be relayed <span class="k">for</span>. It&amp;rsquo;s not a static list as you may have used it before.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;It contains the definition where and how to find valid users within the LDAP directory.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;The parameter &amp;ldquo;mynetworks&amp;rdquo; contains the network of the internal mailservers. There are better <span class="o">(</span>and more secure<span class="o">)</span> ways to <span class="k">do </span>this but <span class="k">for </span>not it&amp;rsquo;s sufficient.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Mail transport&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;transport_maps <span class="o">=</span> <span class="nb">hash</span>:/etc/postfix/transport&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Transport maps define the target system based on the domain.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;SASL configuration&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;smtpd_sasl_auth_enable <span class="o">=</span> yes
+</span><span class='line'><span class="nv">smtpd_sasl_security_options</span> <span class="o">=</span> noanonymous
+</span><span class='line'><span class="nv">smtpd_sasl_local_domain</span> <span class="o">=</span> <span class="nv">$myhostname</span>
+</span><span class='line'><span class="nv">broken_sasl_auth_clients</span> <span class="o">=</span> yes
+</span><span class='line'><span class="nv">smtpd_sasl_auth_clients</span> <span class="o">=</span> yes&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;TLS configuration&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;smtpd_use_tls <span class="o">=</span> yes
+</span><span class='line'><span class="nv">smtpd_tls_auth_only</span> <span class="o">=</span> yes
+</span><span class='line'><span class="nv">smtpd_tls_loglevel</span> <span class="o">=</span> 1&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;smtpd_tls_CAfile <span class="o">=</span> /etc/postfix/ssl/company-bundle.crt
+</span><span class='line'><span class="nv">smtpd_tls_key_file</span> <span class="o">=</span> /etc/postfix/ssl/mail.company.com.key.pem
+</span><span class='line'><span class="nv">smtpd_tls_cert_file</span> <span class="o">=</span> /etc/postfix/ssl/mail.company.com.cert.pem&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;The SASL configuration should be pretty self explanatory. It&amp;rsquo;s madatory that &amp;ldquo;smtpd_sasl_security_options&amp;rdquo; are <span class="nb">set </span>to &amp;ldquo;noanonymous&amp;rdquo;.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;If not it would be possible to logon anonymously. This settings force TLS encryption <span class="k">for </span>every login. No TLS &amp;ndash;&amp;gt; No Login.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;The creation and maintenance of SSL certificates is not covered by this howto.&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;SMTP restrictions&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h6&gt;#&lt;/h6&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;smtpd_recipient_restrictions <span class="o">=</span> permit_sasl_authenticated, permit_mynetworks, check_policy_service unix:private/postgrey, reject_unauth_destination, permit
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>These parameters declare what has to be accomplished that mail is accepted:</p>
+
+<ul>
+<li>Sucessful SASL logon</li>
+<li>Mail comes from a trusted network</li>
+<li>Postgrey is happy and agreed</li>
+</ul>
+
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/etc/postfix/master.cf </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;Disable <span class="nb">local </span>transport&amp;hellip;&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;local     unix  &amp;ndash;       n       n       &amp;ndash;       &amp;ndash;       <span class="nb">local</span>&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/etc/postfix/transport </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>company.com        smtp:[mailgw-int.company.com]</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>This map defines the target <code>mailserver mailgw-int.company.com</code> for the domain <code>company.com</code>.
+The square brackets skip the DNS MX check for every delivery.</p>
+
+<p>Don&rsquo;t forget to convert the map after editing:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Update transport map </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>postmap hash:/etc/postfix/transport&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/etc/postfix/ldap/relay_recipients.cf </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">bind</span>             <span class="o">=</span> yes
+</span><span class='line'><span class="nv">bind_dn</span>          <span class="o">=</span> <span class="nv">cn</span><span class="o">=</span>SMTP Lookup,dc<span class="o">=</span>company,dc<span class="o">=</span>com
+</span><span class='line'><span class="nv">bind_pw</span>          <span class="o">=</span> THISisABSOLUTLYsecret
+</span><span class='line'><span class="nv">server_host</span>      <span class="o">=</span> ldap://1.2.3.4
+</span><span class='line'><span class="nv">search_base</span>      <span class="o">=</span> <span class="nv">ou</span><span class="o">=</span>mail,o<span class="o">=</span>datacenter,c<span class="o">=</span>de,dc<span class="o">=</span>company,dc<span class="o">=</span>com
+</span><span class='line'><span class="nv">query_filter</span>     <span class="o">=</span> <span class="o">(</span>&amp;amp;<span class="o">(</span><span class="nv">maildrop</span><span class="o">=</span>%s<span class="o">)(</span><span class="nv">destinationIndicator</span><span class="o">=</span>external<span class="o">))</span>
+</span><span class='line'><span class="nv">result_attribute</span> <span class="o">=</span> uid
+</span><span class='line'><span class="nv">version</span>          <span class="o">=</span> 3
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Should be pretty easy to understand. The most important part is the query filter. I use a combination of maildrop and destinationIndicator. This makes in pretty easy to seperate innternl from external users. This makes it possible to protect internal mailgroups from external access. &ldquo;%s&rdquo; will be replaced by the recipients address.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Example LDAP entry </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dn: uid=admin,ou=mail,o=datacenter,c=de,dc=company,dc=com
+</span><span class='line'>cn: Admin
+</span><span class='line'>destinationIndicator: external
+</span><span class='line'>gidNumber: 505
+</span><span class='line'>givenName: admin
+</span><span class='line'>homeDirectory: /var/spool/mail/admin
+</span><span class='line'>mail: &lt;a href="&#x6d;&#97;&#105;&#108;&#116;&#x6f;&#58;&#97;&#100;&#109;&#x69;&#x6e;&#64;&#99;&#111;&#x6d;&#112;&#97;&#x6e;&#121;&#46;&#x63;&#111;&#109;">&#x61;&#100;&#x6d;&#x69;&#x6e;&#64;&#x63;&#111;&#109;&#x70;&#97;&#x6e;&#121;&#x2e;&#x63;&#x6f;&#x6d;&lt;/a>
+</span><span class='line'>mailbox: /var/spool/mail/admin/Maildir
+</span><span class='line'>maildrop: &lt;a href="&#x6d;&#97;&#x69;&#x6c;&#116;&#111;&#x3a;&#97;&#100;&#x6d;&#105;&#x6e;&#x40;&#99;&#111;&#x6d;&#x70;&#x61;&#x6e;&#121;&#46;&#x63;&#111;&#x6d;">&#97;&#x64;&#109;&#x69;&#x6e;&#x40;&#99;&#111;&#x6d;&#x70;&#x61;&#x6e;&#x79;&#46;&#x63;&#x6f;&#109;&lt;/a>
+</span><span class='line'>maildrop: &lt;a href="&#x6d;&#97;&#x69;&#x6c;&#x74;&#x6f;&#x3a;&#112;&#111;&#x73;&#x74;&#x6d;&#x61;&#115;&#x74;&#x65;&#114;&#64;&#99;&#x6f;&#109;&#112;&#97;&#x6e;&#x79;&#x2e;&#x63;&#x6f;&#109;">&#112;&#x6f;&#x73;&#x74;&#x6d;&#x61;&#115;&#116;&#101;&#114;&#64;&#x63;&#x6f;&#x6d;&#112;&#97;&#x6e;&#x79;&#46;&#x63;&#x6f;&#109;&lt;/a>
+</span><span class='line'>maildrop: &lt;a href="&#109;&#x61;&#105;&#x6c;&#116;&#111;&#58;&#97;&#98;&#x75;&#x73;&#101;&#64;&#99;&#x6f;&#109;&#112;&#x61;&#110;&#121;&#46;&#99;&#111;&#109;">&#97;&#x62;&#117;&#115;&#101;&#x40;&#99;&#111;&#x6d;&#x70;&#97;&#x6e;&#x79;&#46;&#x63;&#x6f;&#x6d;&lt;/a>
+</span><span class='line'>objectClass: CourierMailAlias
+</span><span class='line'>objectClass: CourierMailAccount
+</span><span class='line'>objectClass: inetOrgPerson
+</span><span class='line'>sn: admin
+</span><span class='line'>uid: admin
+</span><span class='line'>uidNumber: 505
+</span><span class='line'>userPassword: {CRYPT}AbCdEfGhIjKlMnOpQrStUvWxYz</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The destinationIndicator declares if the user can receive external mails. All maildrop lines are aliases.</p>
+]]></content>
+  </entry>
+  
+</feed>

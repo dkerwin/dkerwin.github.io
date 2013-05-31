@@ -1,0 +1,2025 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[linuxaddicted.de]]></title>
+  <link href="http://dkerwin.github.io/atom.xml" rel="self"/>
+  <link href="http://dkerwin.github.io/"/>
+  <updated>2013-05-31T18:27:46+02:00</updated>
+  <id>http://dkerwin.github.io/</id>
+  <author>
+    <name><![CDATA[Daniel Kerwin]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Switching to Octopress]]></title>
+    <link href="http://dkerwin.github.io/blog/2012/03/22/switching-to-octopress/"/>
+    <updated>2012-03-22T22:10:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2012/03/22/switching-to-octopress</id>
+    <content type="html"><![CDATA[<p>Finally i moved from wordpress to octopress. Not much more to say &ndash; it just matches my workflow better.</p>
+
+<h2>Powered by:</h2>
+
+<ul>
+<li><a href="http://octopress.org/">Octopress</a></li>
+<li>Coderwall aside from <a href="http://kagekirin.github.com/blog/2012/02/22/playing-with-octopress-custom-asides/">kagekirin.github.com</a></li>
+<li>Theme is a mix of the default and <a href="http://melandri.net/2012/02/14/octopress-theme-customization/">Alessandro Melandri&rsquo;s modifications</a></li>
+<li><a href="http://www.vim.org/">Vim</a></li>
+<li><a href="http://git-scm.com/">Git</a> and <a href="http://github.com">Github</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[puppetmasterd and passenger]]></title>
+    <link href="http://dkerwin.github.io/blog/2010/03/18/puppetmasterd-and-passenger/"/>
+    <updated>2010-03-18T19:30:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2010/03/18/puppetmasterd-and-passenger</id>
+    <content type="html"><![CDATA[<p>It seems like some people have trouble configuring/undestanding how to combine puppetmasterd and Passenger (aka mod_rails). Let&rsquo;s get it on:</p>
+
+<h2>Install depencies</h2>
+
+<p>You need the following components on your puppetmaster server:</p>
+
+<ul>
+<li>Phusion Passenger (<a href="http://modrails.com/">http://modrails.com</a>)</li>
+<li>Rack (<a href="http://rubyforge.org/projects/rack">http://rubyforge.org/projects/rack</a>)</li>
+</ul>
+
+
+<h2>Configure puppetmaster</h2>
+
+<p>Your puppet package should contain a config.ru. I found mine in /usr/share/doc/puppet-0.25.4-r1/ext/rack/files/config.ru.bz2 (Gentoo).</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mkdir /etc/puppet/rack
+</span><span class='line'>mkdir /etc/puppet/rack/public
+</span><span class='line'>cp <span class="o">[</span>YOUR_CONFIG.RU<span class="o">]</span> /etc/puppet/rack
+</span><span class='line'>chown puppet:root /etc/puppet/rack/config.ru
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!--more-->
+
+
+<p>The final chown line is important! This way rack determines under which user to run the puppetmaster processes.</p>
+
+<p>Add the following lines to your puppet.conf:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>puppetmasterd<span class="o">]</span>
+</span><span class='line'>...
+</span><span class='line'><span class="nv">ssl_client_header</span> <span class="o">=</span> SSL_CLIENT_S_DN
+</span><span class='line'><span class="nv">ssl_client_verify_header</span> <span class="o">=</span> SSL_CLIENT_VERIFY
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Apache config</h2>
+
+<p>You can keep your passenger config as is and modify it when required. Here&rsquo;s a example vhost config:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='apache'><span class='line'><span class="nb">Listen</span> <span class="m">8140</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;VirtualHost</span> <span class="s">*:8140</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nb">ServerName</span> puppet
+</span><span class='line'>    <span class="nb">DocumentRoot</span> <span class="sx">/etc/puppet/rack/public/</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nb">CustomLog</span> <span class="s2">&quot;|/usr/sbin/rotatelogs /var/www/puppet/logs/access_log.%Y%m%d-%H%M 86400&quot;</span> common
+</span><span class='line'>    <span class="nb">ErrorLog</span>  <span class="s2">&quot;|/usr/sbin/rotatelogs /var/www/puppet/logs/error_log.%Y%m%d-%H%M 86400&quot;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nb">PassengerHighPerformance</span> <span class="k">on</span>
+</span><span class='line'>    <span class="nb">PassengerMaxPoolSize</span> <span class="m">15</span>
+</span><span class='line'>    <span class="nb">PassengerPoolIdleTime</span> <span class="m">300</span>
+</span><span class='line'>    <span class="nb">PassengerUseGlobalQueue</span> <span class="k">on</span>
+</span><span class='line'>    <span class="nb">PassengerStatThrottleRate</span> <span class="m">120</span>
+</span><span class='line'>    <span class="nb">RackAutoDetect</span> <span class="k">Off</span>
+</span><span class='line'>    <span class="nb">RailsAutoDetect</span> <span class="k">Off</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nb">RackBaseURI</span> /
+</span><span class='line'>
+</span><span class='line'>    <span class="nb">SSLEngine</span> <span class="k">on</span>
+</span><span class='line'>    <span class="nb">SSLProtocol</span> -ALL +SSLv3 +TLSv1
+</span><span class='line'>    <span class="nb">SSLCipherSuite</span> <span class="k">ALL</span>:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP
+</span><span class='line'>    <span class="nb">SSLCertificateFile</span> <span class="sx">/var/lib/puppet/ssl/certs/XXXXXXXXXXXX.pem</span>
+</span><span class='line'>    <span class="nb">SSLCertificateKeyFile</span> <span class="sx">/var/lib/puppet/ssl/private_keys/XXXXXXXXXXXX.pem</span>
+</span><span class='line'>    <span class="nb">SSLCertificateChainFile</span> <span class="sx">/var/lib/puppet/ssl/ca/ca_crt.pem</span>
+</span><span class='line'>    <span class="nb">SSLCACertificateFile</span> <span class="sx">/var/lib/puppet/ssl/ca/ca_crt.pem</span>
+</span><span class='line'>    <span class="nb">SSLCARevocationFile</span> <span class="sx">/var/lib/puppet/ssl/ca/ca_crl.pem</span>
+</span><span class='line'>    <span class="nb">SSLVerifyClient</span> optional
+</span><span class='line'>    <span class="nb">SSLVerifyDepth</span> <span class="m">1</span>
+</span><span class='line'>    <span class="nb">SSLOptions</span> +StdEnvVars
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;Directory</span> <span class="s">&quot;/etc/puppet/rack/public/&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>        <span class="nb">Options</span> <span class="k">None</span>
+</span><span class='line'>        <span class="nb">AllowOverride</span> <span class="k">None</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nb">Order</span> allow,deny
+</span><span class='line'>        <span class="nb">Allow</span> from <span class="k">all</span>
+</span><span class='line'>    <span class="nt">&lt;/Directory&gt;</span>
+</span><span class='line'><span class="nt">&lt;/Virtualhost&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Restart apache and when clients connect are are triggered via puppetrun you may see something like this with passenger-status:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># passenger-status</span>
+</span><span class='line'>----------- General information -----------
+</span><span class='line'><span class="nv">max</span>      <span class="o">=</span> 20
+</span><span class='line'><span class="nv">count</span>    <span class="o">=</span> 9
+</span><span class='line'><span class="nv">active</span>   <span class="o">=</span> 0
+</span><span class='line'><span class="nv">inactive</span> <span class="o">=</span> 9
+</span><span class='line'>Waiting on global queue: 0
+</span><span class='line'>
+</span><span class='line'>----------- Domains -----------
+</span><span class='line'>/etc/puppet/rack:
+</span><span class='line'>  PID: 19160   Sessions: 0    Processed: 39      Uptime: 20s
+</span><span class='line'>  PID: 19202   Sessions: 0    Processed: 70      Uptime: 17s
+</span><span class='line'>  PID: 18934   Sessions: 0    Processed: 95      Uptime: 45s
+</span><span class='line'>  PID: 18977   Sessions: 0    Processed: 66      Uptime: 42s
+</span><span class='line'>  PID: 19008   Sessions: 0    Processed: 63      Uptime: 40s
+</span><span class='line'>  PID: 19184   Sessions: 0    Processed: 2       Uptime: 19s
+</span><span class='line'>  PID: 19103   Sessions: 0    Processed: 8       Uptime: 28s
+</span><span class='line'>
+</span><span class='line'>/var/www/puppet-dashboard/htdocs:
+</span><span class='line'>  PID: 19158   Sessions: 0    Processed: 6       Uptime: 22s
+</span><span class='line'>  PID: 19236   Sessions: 0    Processed: 3       Uptime: 10s
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Also refer to the offical puppet documentation on passenger <a href="http://docs.puppetlabs.com/guides/passenger.html">here</a></a>.</p>
+
+<p>That&rsquo;s it.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[OpenVPN active/active cluster]]></title>
+    <link href="http://dkerwin.github.io/blog/2010/02/01/openvpn-active-slash-active-cluster/"/>
+    <updated>2010-02-01T20:49:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2010/02/01/openvpn-active-slash-active-cluster</id>
+    <content type="html"><![CDATA[<p>This is a small howto explaining how to run a active/active Cluster (keeplaived) setup with OpenVPN. The active/active reflects that both cluster nodes run the same OpenVPN instance. In server mode this setup leads to routing problems as both nodes have the tunnel route added during startup (not after connect). This results in routing trouble as i needed the passive node to access the VPN tunnel via the active node. This is how i solved it:</p>
+
+<!--more-->
+
+
+<h2>Routing setup</h2>
+
+<p>Both firewall nodes have a static route which forwards tunnel traffic to one of the internal cluster IP&rsquo;s. The metric for this route is 2 so a active tunnel is preferred over that static route.</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">routes_eth2</span><span class="o">=(</span> <span class="s2">&quot;192.168.44.0/24 via 192.168.20.254 metric 2&quot;</span> <span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It doesn&rsquo;t matter which node is active and gets the VPN connects as the other node has the right routing entries.</p>
+
+<h2>OpenVPN configuration</h2>
+
+<p>This setup requires the use of sudo or to run the OpenVPN daemon as root (sudo, sudo, sudo!!!). First we disable to automatically adding of routes and specify scripts for client-connect and client-disconnect. Dont forget to set script security.</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>route-noexec
+</span><span class='line'>client-connect /etc/openvpn/cluster_routing.sh
+</span><span class='line'>client-disconnect /etc/openvpn/cluster_routing.sh
+</span><span class='line'>script-security 3
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>cluster_routing.sh</h2>
+
+<p>This is a simple version of the script but it should be sufficient to work in most scenarios.</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## This is useful for debugging and to get the available env vars</span>
+</span><span class='line'><span class="c">##exec &gt; /tmp/ovpn.debug.$$ 2Y&amp;1; set -x</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;${script_type}&quot;</span> <span class="o">==</span> <span class="s2">&quot;client-connect&quot;</span> <span class="o">]</span>;
+</span><span class='line'><span class="k">then</span>
+</span><span class='line'>    /usr/bin/sudo /sbin/route add -net <span class="k">${</span><span class="nv">route_network_1</span><span class="k">}</span>/24 gw <span class="k">${</span><span class="nv">route_vpn_gateway</span><span class="k">}</span>
+</span><span class='line'><span class="k">else</span>
+</span><span class='line'>    /usr/bin/sudo /sbin/route del -net <span class="k">${</span><span class="nv">route_network_1</span><span class="k">}</span>/24 gw <span class="k">${</span><span class="nv">route_vpn_gateway</span><span class="k">}</span>
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">exit </span>0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This script adds and removes the needed route to get a operational tunnel.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Short review: Puppet for Gentoo servers]]></title>
+    <link href="http://dkerwin.github.io/blog/2009/12/18/short-review-puppet-for-gentoo-servers/"/>
+    <updated>2009-12-18T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2009/12/18/short-review-puppet-for-gentoo-servers</id>
+    <content type="html"><![CDATA[<p>I recently started to integrate <a href="http://reductivelabs.com/trac/puppet/">Puppet</a> with my company&rsquo;s OS installer to build custom Gentoo servers in almost no time. The install/build system reached a stable state and i want to share some information&rsquo;s on what i did to get it working. The Gentoo support of puppet is not perfect but sufficient for my use case. There are still some issues to solve:</p>
+
+<ul>
+<li>Slots don&rsquo;t work (I&rsquo;m working on a patch for the portage provider to address this issue)</li>
+<li>No nice way to manage /etc/conf.d/net</li>
+<li>Only the runlevel &ldquo;default&rdquo; can be managed (This is sufficient for most cases)</li>
+<li>No built in USE flag support (i use a binhost so this doesn&rsquo;t really affect my setup). Check this <a href="http://log.onthebrink.de/2008/05/using-puppet-on-gentoo.html">site</a> for a possible solution</li>
+</ul>
+
+
+<p>The missing slots integration is especially important when it comes to Tomcat. Tomcat requires sun-jdk-1.5 and sun-jdk-1.6. I solved this by adding sun-jdk-1.5 to our install image. Apart from this problems it works very well.<!--more--></p>
+
+<h2>Binhost setup</h2>
+
+<p>The easiest way to ensure that all systems run the same software (version, use flags) is to setup a portage binhost and force all clients to use this server as only package source. There are a lot of howto&rsquo;s out there on creating a binhost so i won&rsquo;t explain it detail. To force all clients to use only binary packages set the following statements in make.conf (Puppet distribution!):</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">PORTAGE_BINHOST</span><span class="o">=</span><span class="s2">&quot;http://192.168.1.1/x86_64&quot;</span>
+</span><span class='line'><span class="nv">EMERGE_DEFAULT_OPTS</span><span class="o">=</span><span class="s2">&quot;--getbinpkgonly --usepkgonly&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The parameter EMERGE_DEFAULT_OPTS is important because Puppet will run the command &ldquo;emerge xxx/yyy&rdquo; so you can&rsquo;t specify extra parameters. This parameter setup ensures that the package cannot be installed when the binary package is missing on the binhost.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[New helper script: SVN updater using Growl notifications]]></title>
+    <link href="http://dkerwin.github.io/blog/2009/05/27/new-helper-script-svn-updater-using-growl-notifications/"/>
+    <updated>2009-05-27T00:00:00+02:00</updated>
+    <id>http://dkerwin.github.io/blog/2009/05/27/new-helper-script-svn-updater-using-growl-notifications</id>
+    <content type="html"><![CDATA[<p>This small helper script should be added to cron and checks your local working copies against the online repository. It can automatically update your working copies if a newer revision is available. The user will be informed using <a href="http://www.growl.info/">Growl</a> popups. As Growl is only available for Mac users it&rsquo;s a Mac only tool by now.</p>
+
+<p>The script currently registers with Growl using the classes from Python bindings. This is not necessary and would also be done by growlnotify. I was just interested in how this whole Growl stuff works. Feel free to remove this parts. <!--more--></p>
+
+<p>When i started i was willing to do the whole Growl stuff manually which has worked very well from the command line but not from cron. Seems like the context or something else get&rsquo;s lost and no notifications pop up anymore. To be able to run via cron i switched to growlnotify.</p>
+
+<h2>Depencies</h2>
+
+<ul>
+<li><a href="http://www.growl.info/files/Growl-1.1.4-SDK.dmg">Growl SDK (Python bindings)</a></li>
+<li><a href="http://growl.info/files/Growl-1.1.4.dmg">growlnotify from Growl distribution</a></li>
+<li><a href="http://www.python.org">Python >= 2.5</a></li>
+</ul>
+
+
+<h2>Screenshots</h2>
+
+<p><img class="aligncenter size-full wp-image-223" title="svn_growl_screen_1" src="http://www.linuxaddicted.de/blog/wp-content/uploads/2009/05/picture-4.png" alt="svn_growl_screen_1" width="337" height="180" /></p>
+
+<h2>Download</h2>
+
+
+<p>Download: <strong>[download#5]</strong></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[New Project: Django-powered Nagios configuration]]></title>
+    <link href="http://dkerwin.github.io/blog/2009/03/05/new-project-django-powered-nagios-configuration/"/>
+    <updated>2009-03-05T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2009/03/05/new-project-django-powered-nagios-configuration</id>
+    <content type="html"><![CDATA[<p>It&rsquo;s time for a new private project: The Django-powered Nagios configuration.</p>
+
+<p>The idea resulted in reading the book &ldquo;Python Web Development with Django&rdquo;. One of the authors describes one of his projects for internal use: a Nagios config manager and i think it&rsquo;s a great idea. I just played around with the idea but it got pretty usable so far. It&rsquo;s not in a production ready state but as soon as it may be usable to you i will release it. Here&rsquo;s a development screenshot:</p>
+
+<!--more-->
+
+
+<p><img src="http://dkerwin.github.io/images/django-nagios.png" title="Django Nagios configuration" ></p>
+
+<p>More informations to come&hellip; Stay tuned</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Using Django with Komodo IDE]]></title>
+    <link href="http://dkerwin.github.io/blog/2009/02/10/using-django-with-komodo-ide/"/>
+    <updated>2009-02-10T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2009/02/10/using-django-with-komodo-ide</id>
+    <content type="html"><![CDATA[<p>I recently started to work on a new <a href="http://www.djangoproject.org/">Django</a> project and tried use my default IDE: Komodo IDE. Unfortunately it didn&rsquo;t work out the way i wanted. Code cpmpletion didn&rsquo;t work just as the import of my app. Here&rsquo;s how i solved it:</p>
+
+<!--more-->
+
+
+<ul>
+<li>Add a new Python import directory: <strong>Preferences &rarr; Languages &rarr; Python</strong></li>
+</ul>
+
+
+<p>My Django resides in /Library/Python/2.5/site-packages. Your installation may be in a different location.
+<img class="center" src="http://www.linuxaddicted.de/blog/wp-content/uploads/2009/02/komodo_prefs.png" width="477" height="307" title="komodo_prefs" ></p>
+
+<ul>
+<li>Update your Komodo project: <strong>Properties &rarr; Languages &rarr; Python</strong></li>
+</ul>
+
+
+<p>My project resides in /Users/dkerwin/development/django/stag_party with several applications inside.
+<img class="center" src="http://www.linuxaddicted.de/blog/wp-content/uploads/2009/02/project_import.png" width="414" height="207" title="project_import" ></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Installing iPython on OSX]]></title>
+    <link href="http://dkerwin.github.io/blog/2009/02/02/installing-ipython-on-osx/"/>
+    <updated>2009-02-02T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2009/02/02/installing-ipython-on-osx</id>
+    <content type="html"><![CDATA[<p>If you don&rsquo;t know iPython by now: <a href="http://ipython.scipy.org/moin/">check it out</a></p>
+
+<p>It&rsquo;s a pretty nice tool if you work with python from the terminal. Especially the easy way to get information about modules and functions. The easiest way to install (especially in a Mac environment) is to use the &ldquo;alldeps&rdquo; tarball.</p>
+
+<!--more-->
+
+
+
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>deathstar-mac ~ <span class="nv">$ </span>wget http://ipython.scipy.org/dist/alldeps/ipython-alldeps-0.9.1.tar
+</span><span class='line'>deathstar-mac ~ <span class="nv">$ </span>tar xvf ipython-alldeps-0.9.1.tar
+</span><span class='line'>deathstar-mac ~ <span class="nv">$ </span><span class="nb">cd </span>ipython-alldeps-0.9.1.tar
+</span><span class='line'>deathstar-mac ~ <span class="nv">$ </span>make
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The default install location is ~/usr/local. You may change this by modifying the install scripts but for now use the default. Now it&rsquo;s time to make some modifications to your profile. Add the following lines:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>deathstar-mac ~ <span class="nv">$ </span><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;$PATH:/Users/YOUR_USERNAME/usr/local/bin&quot;</span>
+</span><span class='line'>deathstar-mac ~ <span class="nv">$ </span><span class="nb">export </span><span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PYTHONPATH</span>:/Users/YOUR_USERNAME/usr/local/lib/python2.5/site-packages
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&rsquo;s complete the installation process:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>deathstar-mac ~ <span class="nv">$ </span>iptest
+</span><span class='line'>deathstar-mac ~ <span class="nv">$ </span><span class="nb">cd </span>ipython-alldeps-0.9.1/ipython-0.9.1
+</span><span class='line'>deathstar-mac ~ <span class="nv">$ </span>python setup.py install --prefix<span class="o">=</span>~/usr/local
+</span><span class='line'>
+</span><span class='line'>deathstar-mac ~ <span class="nv">$ </span>ipython
+</span><span class='line'>Leopard libedit detected.
+</span><span class='line'>Python 2.5.1 <span class="o">(</span>r251:54863, Apr 15 2008, 22:57:26<span class="o">)</span>
+</span><span class='line'>Type <span class="s2">&quot;copyright&quot;</span>, <span class="s2">&quot;credits&quot;</span> or <span class="s2">&quot;license&quot;</span> <span class="k">for </span>more information.
+</span><span class='line'>
+</span><span class='line'>IPython 0.9.1 -- An enhanced Interactive Python.
+</span><span class='line'>?         -&gt; Introduction and overview of IPython<span class="s1">&#39;s features.</span>
+</span><span class='line'><span class="s1">%quickref -&gt; Quick reference.</span>
+</span><span class='line'><span class="s1">help      -&gt; Python&#39;</span>s own <span class="nb">help </span>system.
+</span><span class='line'>object?   -&gt; Details about <span class="s1">&#39;object&#39;</span>. ?object also works, ?? prints more.
+</span><span class='line'>
+</span><span class='line'>In <span class="o">[</span>1<span class="o">]</span>:
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Enjoy!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Inbound Traffic Shaping made (pretty) easy]]></title>
+    <link href="http://dkerwin.github.io/blog/2009/01/28/inbound-traffic-shaping-made-pretty-easy/"/>
+    <updated>2009-01-28T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2009/01/28/inbound-traffic-shaping-made-pretty-easy</id>
+    <content type="html"><![CDATA[<p>It&rsquo;s not that easy to get trafic shaping done with Linux especially when it comes to inbound traffic. After some serious research i found this <a href="http://www.ibiblio.org/pub/Linux/docs/HOWTO/other-formats/html_single/ADSL-Bandwidth-Management-HOWTO.html">howto</a> which is a excellent starting point. The supplied script can be easily customized and works pretty good. If there&rsquo;s interest i can post my version for incoming traffic only.</p>
+
+<p>You have to apply the IMQ patch (can be found <a href="http://www.linuximq.net/patches.html">here</a>) to your kernel to get this working. IMQ is necessary because Linux can only limit outgoing traffic with builtin kernel settings.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Zattoo: Watch (free) TV on your PC]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/11/zattoo-watch-free-tv-on-your-pc/"/>
+    <updated>2008-12-11T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/11/zattoo-watch-free-tv-on-your-pc</id>
+    <content type="html"><![CDATA[<p>Always been looking for a good, reliable, fast and free solution to watch TV on your PC? Take a look at <a href="http://zattoo.com/">Zattoo</a>. There are binaries for Mac, M$ and Linux. Give it a try!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Perl: Use of flock]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/10/perl-use-of-flock/"/>
+    <updated>2008-12-10T20:45:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/10/perl-use-of-flock</id>
+    <content type="html"><![CDATA[<p>This is a small example on flock. It may help you to prevent multiple running instances of the same script. Assume you run the script via cron and it may not be finished when cron attempts to start it again. This few lines of code solve this issue.</p>
+
+<figure class='code'><figcaption><span>flock example </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">if</span> <span class="p">(</span> <span class="o">!</span> <span class="nb">open</span><span class="p">(</span> <span class="n">LOCK</span><span class="p">,</span> <span class="s">&quot;&gt;/var/run/my_app.lock&quot;</span> <span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;Failed to open lock file: $!\n&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">## Create exclusive, non blocking lock: LOCK_EX(2) + LOCK_NB(4)</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span> <span class="o">!</span> <span class="nb">flock</span><span class="p">(</span> <span class="n">LOCK</span><span class="p">,</span> <span class="mi">6</span> <span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">close</span><span class="p">(</span> <span class="n">LOCK</span> <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span> <span class="o">!</span> <span class="nb">open</span><span class="p">(</span> <span class="n">PID</span><span class="p">,</span> <span class="s">&quot;&lt;/var/run/my_app.pid&quot;</span> <span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;Failed to read PID file: $!\n&quot;</span><span class="p">;</span>
+</span><span class='line'>        <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">my</span> <span class="nv">$pid</span> <span class="o">=</span> <span class="sr">&lt;PID&gt;</span><span class="p">;</span>
+</span><span class='line'>    <span class="nb">close</span><span class="p">(</span> <span class="n">PID</span> <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;Failed to accquire lock. Another instance (PID $pid) running!\n&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span> <span class="o">!</span> <span class="nb">open</span><span class="p">(</span> <span class="n">PID</span><span class="p">,</span> <span class="s">&quot;&gt;/var/run/my_app.pid&quot;</span> <span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;Failed to open pid file: $!\n&quot;</span><span class="p">;</span>
+</span><span class='line'>        <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">print</span> <span class="n">PID</span> <span class="vg">$$</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span> <span class="o">!</span> <span class="nb">close</span><span class="p">(</span> <span class="n">PID</span> <span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;Failed to write PID file: $!\n&quot;</span><span class="p">;</span>
+</span><span class='line'>        <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Portage: Patch existing Perl module ebuild by using a overlay]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/10/portage-patch-existing-perl-module-ebuild-by-using-a-overlay/"/>
+    <updated>2008-12-10T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/10/portage-patch-existing-perl-module-ebuild-by-using-a-overlay</id>
+    <content type="html"><![CDATA[<p>You may have had the same issue as i some time ago. You install a perl module from Portage but you have to modify the module&rsquo;s code. Of course you don&rsquo;t want to patch and install manually. Assuming the module is named &ldquo;foobar&rdquo; here&rsquo;s how i solved it:</p>
+
+<!--more-->
+
+
+<ol>
+<li>Create a Portage Overlay (refer to the official documentation) and enable it in /etc/make.conf</li>
+<li>Create a new category directory within your overlay dir (mkdir /usr/local/portage/my-ebuilds)</li>
+<li>Create application directory (mkdir /usr/local/portage/my-ebuilds/foobar)</li>
+<li>Copy the existing ebuild to the new app directory</li>
+<li>Create a files directory and put the patch there</li>
+<li>Modify the ebuild to apply your patch</li>
+</ol>
+
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>...
+</span><span class='line'>
+</span><span class='line'><span class="c"># This is the magic line:</span>
+</span><span class='line'><span class="nv">PATCHES</span><span class="o">=</span><span class="s2">&quot;${FILESDIR}/my_patch.patch&quot;</span>
+</span><span class='line'>
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After you finished these tasks you have to (re)generate the Manifest:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>ebuild <span class="o">[</span>OVERLAY_PATH<span class="o">]</span>/my-ebuilds/foobar/foobar-1.0.0.ebuild digest
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&rsquo;s it. If you have trouble feel free to contact me: daniel &lt;-AT-> linuxaddicted.de</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Useful BASH setting: Ignore duplicate commands]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/03/useful-bash-setting-ignore-duplicate-commands/"/>
+    <updated>2008-12-03T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/03/useful-bash-setting-ignore-duplicate-commands</id>
+    <content type="html"><![CDATA[<p>There are many settings that make BASH even more usable. As many people doesn&rsquo;t seem to know this particular parameter i post it here:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">HISTCONTROL</span><span class="o">=</span><span class="s2">&quot;ignoredups&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This setting in bashrc or profile makes BASH ignore duplicate commands when searching the history. It&rsquo;s pretty useful if you had entered the same command several times.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Gentoo: Unmerging software including configs and data]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/03/gentoo-unmerging-software-including-configs-and-data/"/>
+    <updated>2008-12-03T00:00:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/03/gentoo-unmerging-software-including-configs-and-data</id>
+    <content type="html"><![CDATA[<p>If you&rsquo;re unmerging software in Gentoo some files stay on your server. This is a result of the setting CONFIG_PROTECT.
+To unmerge a package completely use this command:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">CONFIG_PROTECT</span><span class="o">=</span><span class="s2">&quot;&quot;</span> emerge -C <span class="o">[</span>SOFTWARE<span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Qualcomm MSM6275 UMTS Vodafone card]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/02/qualcomm-msm6275-umts-vodafone-card/"/>
+    <updated>2008-12-02T13:25:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/02/qualcomm-msm6275-umts-vodafone-card</id>
+    <content type="html"><![CDATA[<h2>Preferences</h2>
+
+<p>First of all make sure UMTS card is recognized by your system. You need PCMCIA support enabled in your kernel. If you compiled it as modules load the modules.</p>
+
+<figure class='code'><figcaption><span>Device check </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>deathstar ~ # lspci
+</span><span class='line'>...
+</span><span class='line'>04:00.0 Network controller: Option N.V. Qualcomm MSM6275 UMTS chip
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Nozomi &ndash; card access</h2>
+
+<p>Download und build the Nozomi kernel module. You can get it <strong><a href="http://www.pharscape.org/component/option,com_forum/Itemid,69/page,viewforum/f,5/">here</a></strong></p>
+
+<figure class='code'><figcaption><span>Nozomi install </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>cd nozomi_2.21alpha_060917
+</span><span class='line'>mkdir -p /lib/modules/KERNEL_VERSION/kernel/drivers/pci/hotplug (if it doesn't exists)
+</span><span class='line'>make
+</span><span class='line'>depmod
+</span><span class='line'>modprobe nozomi</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After you succeeded in loading the nozomi module you should see something like this in dmesg:</p>
+
+<figure class='code'><figcaption><span>dmesg </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>nozomi 0000:04:00.0: Nozomi driver nozomi_tty
+</span><span class='line'>Initializing Nozomi driver 2.21alpha (build date: Jun  9 2008 15:00:29)
+</span><span class='line'>nozomi 0000:04:00.0: Version of card: 3
+</span><span class='line'>nozomi 0000:04:00.0: Initialization OK!</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>PPP Configuration</h2>
+
+<p>You have to supply the PIN to your SIM-card. There are two ways to accomplish this:</p>
+
+<ul>
+<li>Add <code>AT+CPIN=MY_SIM_PIN</code> to your chat script</li>
+<li>Use a little Perl script (for example if you use a PIN app)</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Perl helper </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="c1">#!/usr/bin/perl</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$SIG</span><span class="p">{</span><span class="n">ALRM</span><span class="p">}</span> <span class="o">=</span> <span class="k">sub </span><span class="p">{</span> <span class="nb">die</span><span class="p">(</span><span class="s">&quot;timeout: no response from modem $modem\n&quot;</span><span class="p">);</span> <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="err">§</span><span class="n">pin</span>   <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'><span class="k">my</span> <span class="nv">$modem</span> <span class="o">=</span> <span class="s">&#39;/dev/noz0&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">open</span><span class="p">(</span><span class="n">MODEM</span><span class="p">,</span> <span class="s">&quot;+&lt;&quot;</span><span class="p">,</span> <span class="nv">$modem</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">die</span><span class="p">(</span><span class="s">&quot;Failed to open modem $modem: $!&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">MODEM</span> <span class="s">&quot;AT+CPIN=\&quot;$pin\&quot;\n\r&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="k">while</span> <span class="p">(</span><span class="sr">&lt;MODEM&gt;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="sr">m/OK/</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">close</span><span class="p">(</span><span class="n">MODEM</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">print</span><span class="p">(</span><span class="s">&quot;PIN accepted\n&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="sr">m/ERROR/</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">close</span><span class="p">(</span><span class="n">MODEM</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">print</span><span class="p">(</span><span class="s">&quot;PIN rejected\n&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now it&rsquo;s time to create the PPP config and chat scripts.</p>
+
+<figure class='code'><figcaption><span>/etc/ppp/peers/umts </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># Most GPRS phones don't reply to LCP echo's
+</span><span class='line'>lcp-echo-failure 0
+</span><span class='line'>lcp-echo-interval 0
+</span><span class='line'># Keep pppd attached to the terminal:
+</span><span class='line'># Comment this to get daemon mode pppd
+</span><span class='line'>nodetach
+</span><span class='line'># Debug info from pppd:
+</span><span class='line'># Comment this off, if you don't need more info
+</span><span class='line'>debug
+</span><span class='line'># Connect script:
+</span><span class='line'># scripts to initialize the UMTS modem and start the connection,
+</span><span class='line'>connect /etc/ppp/peers/umts-connect-chat
+</span><span class='line'># Disconnect script:
+</span><span class='line'># AT commands used to 'hangup' the UMTS connection.
+</span><span class='line'>disconnect /etc/ppp/peers/umts-disconnect-chat
+</span><span class='line'># Serial device to which the UMTS card is connected:
+</span><span class='line'>/dev/noz0
+</span><span class='line'># Serial port line speed
+</span><span class='line'>115200
+</span><span class='line'># Hardware flow control:
+</span><span class='line'># Use hardware flow control with cable, Bluetooth and USB but not with IrDA.
+</span><span class='line'>crtscts  # serial cable, Bluetooth and USB, on some occations with IrDA too
+</span><span class='line'>#nocrtscts # IrDA
+</span><span class='line'># Ignore carrier detect signal from the modem:
+</span><span class='line'>local
+</span><span class='line'># IP addresses:
+</span><span class='line'># - accept peers idea of our local address and set address peer as 10.0.0.1
+</span><span class='line'># (any address would do, since IPCP gives 0.0.0.0 to it)
+</span><span class='line'># - if you use the 10. network at home or something and pppd rejects it,
+</span><span class='line'># change the address to something else
+</span><span class='line'>0.0.0.0:0.0.0.0
+</span><span class='line'># pppd must not propose any IP address to the peer!
+</span><span class='line'>noipdefault
+</span><span class='line'># Accept peers idea of our local address
+</span><span class='line'>ipcp-accept-local
+</span><span class='line'># Add the ppp interface as default route to the IP routing table
+</span><span class='line'>defaultroute
+</span><span class='line'># DNS servers from the phone:
+</span><span class='line'># some phones support this, some don't.
+</span><span class='line'>usepeerdns
+</span><span class='line'># ppp compression:
+</span><span class='line'># ppp compression may be used between the phone and the pppd, but the
+</span><span class='line'># serial connection is usually not the bottleneck in GPRS, so the
+</span><span class='line'># compression is useless (and with some phones need to disabled before
+</span><span class='line'># the LCP negotiations succeed).
+</span><span class='line'>novj
+</span><span class='line'>nobsdcomp
+</span><span class='line'>novjccomp
+</span><span class='line'>nopcomp
+</span><span class='line'>noaccomp
+</span><span class='line'># The phone is not required to authenticate:
+</span><span class='line'>noauth
+</span><span class='line'>mtu 1500
+</span><span class='line'>mru 1500</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>/etc/ppp/peers/umts-connect-chat </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>exec chat             \
+</span><span class='line'>  TIMEOUT   5       \
+</span><span class='line'>  ECHO    ON        \
+</span><span class='line'>  ABORT   '\nBUSY\r'      \
+</span><span class='line'>  ABORT   '\nERROR\r'     \
+</span><span class='line'>  ABORT   '\nNO ANSWER\r'     \
+</span><span class='line'>  ABORT   '\nNO CARRIER\r'    \
+</span><span class='line'>  ABORT   '\nNO DIALTONE\r'   \
+</span><span class='line'>  ABORT   '\nRINGING\r\n\r\nRINGING\r'  \
+</span><span class='line'>  ''    \rAT        \
+</span><span class='line'>  TIMEOUT   12        \
+</span><span class='line'>  SAY   "Press CTRL-C to close the connection at any stage!"  \
+</span><span class='line'>  SAY   "\ndefining PDP context...\n" \
+</span><span class='line'>  OK    ATH       \
+</span><span class='line'>  OK    ATE1        \
+</span><span class='line'>  OK    'AT+CGDCONT=1,"IP","web.vodafone.de","",0,0'  \
+</span><span class='line'>  OK    ATD*99#       \
+</span><span class='line'>  TIMEOUT   22        \
+</span><span class='line'>  SAY   "\nwaiting for connect...\n"  \
+</span><span class='line'>  CONNECT   ""        \
+</span><span class='line'>  SAY   "\nConnected." \
+</span><span class='line'>  SAY   "\nIf the following ppp negotiations fail,\n" \
+</span><span class='line'>  SAY   "try restarting the phone.\n"</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>/etc/ppp/peers/umts-disconnect-chat </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>exec /usr/sbin/chat -V -s -S  \
+</span><span class='line'>ABORT   "BUSY"    \
+</span><span class='line'>ABORT   "ERROR"   \
+</span><span class='line'>ABORT   "NO DIALTONE" \
+</span><span class='line'>SAY   "\nSending break to the modem\n"  \
+</span><span class='line'>""    "\K"    \
+</span><span class='line'>""    "+++ATH"  \
+</span><span class='line'>SAY   "\nPDP context detached\n"</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Time to go online</h2>
+
+<figure class='code'><figcaption><span>Connect </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>deathstar ~ # pppd call gprs
+</span><span class='line'>Press CTRL-C to close the connection at any stage!
+</span><span class='line'>defining PDP context...
+</span><span class='line'>AT
+</span><span class='line'>OK
+</span><span class='line'>ATH
+</span><span class='line'>OK
+</span><span class='line'>ATE1
+</span><span class='line'>OK
+</span><span class='line'>AT+CGDCONT=1,"IP","web.vodafone.de","",0,0
+</span><span class='line'>OK
+</span><span class='line'>waiting for connect...
+</span><span class='line'>ATD*99#
+</span><span class='line'>CONNECT
+</span><span class='line'>Connected.
+</span><span class='line'>If the following ppp negotiations fail,
+</span><span class='line'>try restarting the phone.
+</span><span class='line'>Serial connection established.
+</span><span class='line'>using channel 1
+</span><span class='line'>Using interface ppp0
+</span><span class='line'>Connect: ppp0 &lt;--> /dev/noz0
+</span><span class='line'>sent [LCP ConfReq id=0x1 &lt;asyncmap 0x0> &lt;magic 0x9aa17e40>]
+</span><span class='line'>rcvd [LCP ConfReq id=0x0 &lt;asyncmap 0x0> &lt;auth chap MD5> &lt;magic 0x90ae7a2e> &lt;pcomp> &lt;accomp>]
+</span><span class='line'>No auth is possible
+</span><span class='line'>sent [LCP ConfRej id=0x0 &lt;auth chap MD5> &lt;pcomp> &lt;accomp>]
+</span><span class='line'>rcvd [LCP ConfAck id=0x1 &lt;asyncmap 0x0> &lt;magic 0x9aa17e40>]
+</span><span class='line'>rcvd [LCP ConfReq id=0x1 &lt;asyncmap 0x0> &lt;magic 0x90ae7a2e>]
+</span><span class='line'>sent [LCP ConfAck id=0x1 &lt;asyncmap 0x0> &lt;magic 0x90ae7a2e>]
+</span><span class='line'>sent [CCP ConfReq id=0x1 &lt;deflate 15> &lt;deflate(old#) 15>]
+</span><span class='line'>sent [IPCP ConfReq id=0x1 &lt;addr 0.0.0.0> &lt;ms-dns1 0.0.0.0> &lt;ms-dns3 0.0.0.0>]
+</span><span class='line'>rcvd [LCP DiscReq id=0x2 magic=0x90ae7a2e]
+</span><span class='line'>rcvd [LCP ProtRej id=0x3 80 fd 01 01 00 0c 1a 04 78 00 18 04 78 00]
+</span><span class='line'>rcvd [IPCP ConfNak id=0x1 &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14> &lt;ms-wins 10.11.12.13> &lt;ms-wins 10.11.12.14>]
+</span><span class='line'>sent [IPCP ConfReq id=0x2 &lt;addr 0.0.0.0> &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14>]
+</span><span class='line'>rcvd [IPCP ConfNak id=0x2 &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14> &lt;ms-wins 10.11.12.13> &lt;ms-wins 10.11.12.14>]
+</span><span class='line'>sent [IPCP ConfReq id=0x3 &lt;addr 0.0.0.0> &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14>]
+</span><span class='line'>rcvd [IPCP ConfNak id=0x3 &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14> &lt;ms-wins 10.11.12.13> &lt;ms-wins 10.11.12.14>]
+</span><span class='line'>sent [IPCP ConfReq id=0x4 &lt;addr 0.0.0.0> &lt;ms-dns1 10.11.12.13> &lt;ms-dns3 10.11.12.14>]
+</span><span class='line'>rcvd [IPCP ConfReq id=0x0]
+</span><span class='line'>sent [IPCP ConfNak id=0x0 &lt;addr 0.0.0.0>]
+</span><span class='line'>rcvd [IPCP ConfNak id=0x4 &lt;addr 77.24.36.100> &lt;ms-dns1 139.7.30.125> &lt;ms-dns3 139.7.30.126>]
+</span><span class='line'>sent [IPCP ConfReq id=0x5 &lt;addr 77.24.36.100> &lt;ms-dns1 139.7.30.125> &lt;ms-dns3 139.7.30.126>]
+</span><span class='line'>rcvd [IPCP ConfAck id=0x5 &lt;addr 77.24.36.100> &lt;ms-dns1 139.7.30.125> &lt;ms-dns3 139.7.30.126>]
+</span><span class='line'>rcvd [IPCP ConfReq id=0x1]
+</span><span class='line'>sent [IPCP ConfAck id=0x1]
+</span><span class='line'>Could not determine remote IP address: defaulting to 10.64.64.64
+</span><span class='line'>local  IP address 77.24.36.100
+</span><span class='line'>remote IP address 10.64.64.64
+</span><span class='line'>primary   DNS address 139.7.30.125
+</span><span class='line'>secondary DNS address 139.7.30.126
+</span><span class='line'>Script /etc/ppp/ip-up started (pid 8494)
+</span><span class='line'>Script /etc/ppp/ip-up finished (pid 8494), status = 0x1</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&rsquo;s it!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[BigIP client certificates]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/12/02/bigip-client-certificates/"/>
+    <updated>2008-12-02T11:14:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/12/02/bigip-client-certificates</id>
+    <content type="html"><![CDATA[<p>This howto will show you how to use client certificates to authenticate against applications hosted by a BigIP loadbalancer. You may find this howto (or parts of it) on <a href="http://ask.f5.com">ask.f5.com</a> as they was no documentation before on this topic. I forwarded it to F5 some time ago. <strong>This is the only way to use client certificates without purchasing addon modules from F5.</strong></p>
+
+<h3>Purpose</h3>
+
+<p>If you host a website/application which should only be accessible by some users you you may have already thought about client certificates. This makes brute force attacks against login panels impossible.
+This increases the overall application security by adding another layer a user must pass.</p>
+
+<p>The mapping between certificates and access rights is based on a LDAP directory.</p>
+
+<h3>Overview</h3>
+
+<p>The loadbalancer reads the CN from the client certificate and searches the defined group for the virtual server for a matching entry. The loadbalancer verifies CA and CRL&rsquo;s before the lookup takes place.</p>
+
+<p><img class="center" src="http://dkerwin.github.io/images/f5_ldap_auth.png" width="388" height="339" title="BigIP Certificate Auth" ></p>
+
+<h3>LDAP Setup</h3>
+
+<figure class='code'><figcaption><span>Example LDAP tree </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dc=company,dc=com
+</span><span class='line'>   /         \
+</span><span class='line'>  /           \
+</span><span class='line'>...      ou=datacenter
+</span><span class='line'>           /        \
+</span><span class='line'>          /          \
+</span><span class='line'>        ...       ou=webauth
+</span><span class='line'>                   /    \
+</span><span class='line'>                  /      \
+</span><span class='line'>            ou=users    ou=groups</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>User &amp; Group LDIF</h4>
+
+<p>Here are two LDIF examples for users and groups:</p>
+
+<figure class='code'><figcaption><span>User LDIF </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dn: cn=Example User,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>cn: Example User
+</span><span class='line'>sn: Example User
+</span><span class='line'>objectClass: person
+</span><span class='line'>description: It's just a example user</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>Group LDIF </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dn: cn=Example Group,ou=groups,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>cn: Example Group
+</span><span class='line'>objectClass: posixGroup
+</span><span class='line'>description: Group is allowed to connect to BigIP's VHOST secure.company.com
+</span><span class='line'>memberUid: cn=Example User,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>memberUid: cn=Example User No2,ou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>gidNumber: 145</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The &ldquo;memberUid&rdquo; has to match exactly the certificates CN because this is the key the BigIP is looking for.</p>
+
+<h3>BigIP Configuration</h3>
+
+<h4>Authentication Configuration</h4>
+
+<p>As a first step we create a new &ldquo;Authentication Configuration&rdquo;. Just open the web frontend and navigate to:</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>Authentication</code> &rarr; <code>Configuration</code></p>
+
+<p>You have to create a new config for every virtual host you want to secure. This is force by the LDAP group used because every config can only use one group. Here&rsquo;s a example configuration:</p>
+
+<figure class='code'><figcaption><span>Authentication Configuration </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Parameter        | Value
+</span><span class='line'>==========================================================================
+</span><span class='line'>Hosts            | 1.2.3.4
+</span><span class='line'>Search Type      | User
+</span><span class='line'>User Base        | DNou=users,ou=webauth,ou=datacenter,dc=company,dc=com
+</span><span class='line'>User Key         | cn
+</span><span class='line'>Admin DN         | DN for binding
+</span><span class='line'>Admin Password   | Bind password
+</span><span class='line'>Group Base DN    | ou=groups,ou=webauth,ou=datacenter,dc=company,dcc=com
+</span><span class='line'>Group Key        | cn
+</span><span class='line'>Group Member Key | memberUid
+</span><span class='line'>Valid Groups     | Corresponding LDAP group</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Authentication Profile</h3>
+
+<p>The next step is to create a profile which inherits the new created config. You need a profile for every configuration. Navigate to</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>Authentication</code> &rarr; <code>Profiles</code></p>
+
+<figure class='code'><figcaption><span>Authentication Profile </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Parameter      | Value
+</span><span class='line'>==========================================================================
+</span><span class='line'>Type           | SSL Client Certificate LDAP
+</span><span class='line'>Parent Profile | ssl_cc_ldap
+</span><span class='line'>Mode           | Enabled
+</span><span class='line'>Configuration  | NAME OF CONF JUST CREATED</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>CA Upload</h3>
+
+<p>If your CA certificate(s) have not been installed it&rsquo;s time to do so.</p>
+
+<p><code>Local Traffic</code> &rarr; <code>SSL Certificates</code> &rarr; <code>Import</code></p>
+
+<h3>SSL Profiles</h3>
+
+<p>To use SSL (without client certificates too) you need a SSL profile. Navigate to</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Profiles</code> &rarr; <code>SSL</code> &rarr; <code>Client</code></p>
+
+<p>Create a new profile based on &ldquo;clientssl&rdquo; or one of your already defined profiles.</p>
+
+<figure class='code'><figcaption><span>SSL Client </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Parameter                          | Value
+</span><span class='line'>==========================================================================
+</span><span class='line'>Chain                              | CompanyBundle
+</span><span class='line'>Trusted Certificate Authorities    | CompanyBundle
+</span><span class='line'>Client Certificate                 | require
+</span><span class='line'>Frequency                          | always
+</span><span class='line'>Advertised Certificate Authorities | CompanyBundle</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Virtual Host Configuration</h3>
+
+<p>You may create a new virtual host or modify a existing host. Navigate here</p>
+
+<p><code>Local Traffic</code> &rarr; <code>Virtual Servers</code></p>
+
+<p>Modify the following parameters (if you already used SSL in this vhost):</p>
+
+<figure class='code'><figcaption><span>Virtual Servers </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Parameter               | Value
+</span><span class='line'>==========================================================================
+</span><span class='line'>SSL Profile (Client)    | Profile created earlier
+</span><span class='line'>Authentication Profiles | Profile created earlier</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>That&rsquo;s it!</h3>
+
+<p>Import your client certificates to your browser and enjoy your secure connection.</p>
+
+<p>If you have any trouble don&rsquo;t hesitate to contact me: daniel {A_T} linuxaddicted {D_O_T} de</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Postfix Relay based on OpenLDAP]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/10/27/postfix-relay-based-on-openldap/"/>
+    <updated>2008-10-27T14:01:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/10/27/postfix-relay-based-on-openldap</id>
+    <content type="html"><![CDATA[<p>This howto describes the configuration of a Postfix relay based on OpenLDAP. These are the features of the relay:</p>
+
+<ul>
+<li>User verification through LDAP</li>
+<li>Separation on internal and external users</li>
+<li>Greylisting</li>
+<li>User Relaying based on TLS and LDAP authentication</li>
+<li>Forwarding to local mailserver</li>
+</ul>
+
+
+<!--more-->
+
+
+
+
+<figure class='code'><figcaption><span>/etc/postfix/main.cf </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## Global settings</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">queue_directory</span> <span class="o">=</span> /var/spool/postfix
+</span><span class='line'><span class="nv">command_directory</span> <span class="o">=</span> /usr/sbin
+</span><span class='line'><span class="nv">daemon_directory</span> <span class="o">=</span> /usr/lib/postfix
+</span><span class='line'><span class="nv">mail_owner</span> <span class="o">=</span> postfix
+</span><span class='line'><span class="nv">smtpd_banner</span> <span class="o">=</span> mail.company.com ESMTP MailRelay
+</span><span class='line'><span class="nv">sendmail_path</span> <span class="o">=</span> /usr/sbin/sendmail
+</span><span class='line'><span class="nv">newaliases_path</span> <span class="o">=</span> /usr/bin/newaliases
+</span><span class='line'><span class="nv">mailq_path</span> <span class="o">=</span> /usr/bin/mailq
+</span><span class='line'><span class="nv">setgid_group</span> <span class="o">=</span> postdrop
+</span><span class='line'><span class="nv">html_directory</span> <span class="o">=</span> /usr/share/doc/postfix-2.3.6/html
+</span><span class='line'><span class="nv">manpage_directory</span> <span class="o">=</span> /usr/share/man
+</span><span class='line'><span class="nv">sample_directory</span> <span class="o">=</span> /etc/postfix
+</span><span class='line'><span class="nv">readme_directory</span> <span class="o">=</span> /usr/share/doc/postfix-2.3.6/readme
+</span><span class='line'><span class="nv">home_mailbox</span> <span class="o">=</span> .maildir/
+</span><span class='line'><span class="nv">alias_database</span> <span class="o">=</span> <span class="nb">hash</span>:/etc/mail/aliases
+</span><span class='line'>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## Internet and domain names</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">myhostname</span> <span class="o">=</span> mail.company.com
+</span><span class='line'><span class="nv">mydomain</span> <span class="o">=</span> company.com
+</span><span class='line'>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## Sending mail (local)</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">myorigin</span> <span class="o">=</span> company.com
+</span><span class='line'>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## Receiving mail</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">inet_interfaces</span> <span class="o">=</span> all
+</span><span class='line'><span class="nv">proxy_interfaces</span> <span class="o">=</span>
+</span><span class='line'><span class="nv">mydestination</span> <span class="o">=</span>
+</span><span class='line'><span class="nv">local_recipient_maps</span> <span class="o">=</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## As incoming mail doesn&#39;t terminate on the relay we have to remove the values from &quot;mydestination&quot;.</span>
+</span><span class='line'><span class="c">## That&#39;s why &quot;local_recipients&quot; is unset as well.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## Relay control</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">relay_domains</span> <span class="o">=</span> company.com
+</span><span class='line'><span class="nv">relay_recipient_maps</span> <span class="o">=</span> proxy:ldap:/etc/postfix/ldap/relay_recipients.cf
+</span><span class='line'><span class="nv">mynetworks</span> <span class="o">=</span> 192.168.1.0/28
+</span><span class='line'>
+</span><span class='line'><span class="c">## The relay_recipient_map contains the users that mail should be relayed for. It&#39;s not a static list as you may have used it before. </span>
+</span><span class='line'><span class="c">## It contains the definition where and how to find valid users within the LDAP directory.</span>
+</span><span class='line'><span class="c">## The parameter &quot;mynetworks&quot; contains the network of the internal mailservers. There are better (and more secure) ways to do this but for not it&#39;s sufficient.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## Mail transport</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">transport_maps</span> <span class="o">=</span> <span class="nb">hash</span>:/etc/postfix/transport
+</span><span class='line'>
+</span><span class='line'><span class="c">## Transport maps define the target system based on the domain.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## SASL configuration</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">smtpd_sasl_auth_enable</span> <span class="o">=</span> yes
+</span><span class='line'><span class="nv">smtpd_sasl_security_options</span> <span class="o">=</span> noanonymous
+</span><span class='line'><span class="nv">smtpd_sasl_local_domain</span> <span class="o">=</span> <span class="nv">$myhostname</span>
+</span><span class='line'><span class="nv">broken_sasl_auth_clients</span> <span class="o">=</span> yes
+</span><span class='line'><span class="nv">smtpd_sasl_auth_clients</span> <span class="o">=</span> yes
+</span><span class='line'>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## TLS configuration</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">smtpd_use_tls</span> <span class="o">=</span> yes
+</span><span class='line'><span class="nv">smtpd_tls_auth_only</span> <span class="o">=</span> yes
+</span><span class='line'><span class="nv">smtpd_tls_loglevel</span> <span class="o">=</span> 1
+</span><span class='line'>
+</span><span class='line'><span class="nv">smtpd_tls_CAfile</span> <span class="o">=</span> /etc/postfix/ssl/company-bundle.crt
+</span><span class='line'><span class="nv">smtpd_tls_key_file</span> <span class="o">=</span> /etc/postfix/ssl/mail.company.com.key.pem
+</span><span class='line'><span class="nv">smtpd_tls_cert_file</span> <span class="o">=</span> /etc/postfix/ssl/mail.company.com.cert.pem
+</span><span class='line'>
+</span><span class='line'><span class="c">## The SASL configuration should be pretty self explanatory. It&#39;s madatory that &quot;smtpd_sasl_security_options&quot; are set to &quot;noanonymous&quot;. </span>
+</span><span class='line'><span class="c">## If not it would be possible to logon anonymously. This settings force TLS encryption for every login. No TLS -&amp;gt; No Login. </span>
+</span><span class='line'><span class="c">## The creation and maintenance of SSL certificates is not covered by this howto.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="c">## SMTP restrictions</span>
+</span><span class='line'><span class="c">#####################################################################</span>
+</span><span class='line'><span class="nv">smtpd_recipient_restrictions</span> <span class="o">=</span> permit_sasl_authenticated, permit_mynetworks, check_policy_service unix:private/postgrey, reject_unauth_destination, permit
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>These parameters declare what has to be accomplished that mail is accepted:</p>
+
+<ul>
+<li>Sucessful SASL logon</li>
+<li>Mail comes from a trusted network</li>
+<li>Postgrey is happy and agreed</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>/etc/postfix/master.cf </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">## Disable local transport...</span>
+</span><span class='line'><span class="c">#local     unix  -       n       n       -       -       local</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>/etc/postfix/transport </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>company.com        smtp:[mailgw-int.company.com]</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This map defines the target <code>mailserver mailgw-int.company.com</code> for the domain <code>company.com</code>.
+The square brackets skip the DNS MX check for every delivery.</p>
+
+<p>Don&rsquo;t forget to convert the map after editing:</p>
+
+<figure class='code'><figcaption><span>Update transport map </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># postmap hash:/etc/postfix/transport</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>/etc/postfix/ldap/relay_recipients.cf </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">bind</span>             <span class="o">=</span> yes
+</span><span class='line'><span class="nv">bind_dn</span>          <span class="o">=</span> <span class="nv">cn</span><span class="o">=</span>SMTP Lookup,dc<span class="o">=</span>company,dc<span class="o">=</span>com
+</span><span class='line'><span class="nv">bind_pw</span>          <span class="o">=</span> THISisABSOLUTLYsecret
+</span><span class='line'><span class="nv">server_host</span>      <span class="o">=</span> ldap://1.2.3.4
+</span><span class='line'><span class="nv">search_base</span>      <span class="o">=</span> <span class="nv">ou</span><span class="o">=</span>mail,o<span class="o">=</span>datacenter,c<span class="o">=</span>de,dc<span class="o">=</span>company,dc<span class="o">=</span>com
+</span><span class='line'><span class="nv">query_filter</span>     <span class="o">=</span> <span class="o">(</span>&amp;<span class="o">(</span><span class="nv">maildrop</span><span class="o">=</span>%s<span class="o">)(</span><span class="nv">destinationIndicator</span><span class="o">=</span>external<span class="o">))</span>
+</span><span class='line'><span class="nv">result_attribute</span> <span class="o">=</span> uid
+</span><span class='line'><span class="nv">version</span>          <span class="o">=</span> 3
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Should be pretty easy to understand. The most important part is the query filter. I use a combination of maildrop and destinationIndicator. This makes in pretty easy to seperate innternl from external users. This makes it possible to protect internal mailgroups from external access. &ldquo;%s&rdquo; will be replaced by the recipients address.</p>
+
+<figure class='code'><figcaption><span>Example LDAP entry </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>dn: uid=admin,ou=mail,o=datacenter,c=de,dc=company,dc=com
+</span><span class='line'>cn: Admin
+</span><span class='line'>destinationIndicator: external
+</span><span class='line'>gidNumber: 505
+</span><span class='line'>givenName: admin
+</span><span class='line'>homeDirectory: /var/spool/mail/admin
+</span><span class='line'>mail: admin@company.com
+</span><span class='line'>mailbox: /var/spool/mail/admin/Maildir
+</span><span class='line'>maildrop: admin@company.com
+</span><span class='line'>maildrop: postmaster@company.com
+</span><span class='line'>maildrop: abuse@company.com
+</span><span class='line'>objectClass: CourierMailAlias
+</span><span class='line'>objectClass: CourierMailAccount
+</span><span class='line'>objectClass: inetOrgPerson
+</span><span class='line'>sn: admin
+</span><span class='line'>uid: admin
+</span><span class='line'>uidNumber: 505
+</span><span class='line'>userPassword: {CRYPT}AbCdEfGhIjKlMnOpQrStUvWxYz</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The destinationIndicator declares if the user can receive external mails. All maildrop lines are aliases.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[HA Linux Router]]></title>
+    <link href="http://dkerwin.github.io/blog/2008/10/27/ha-linux-router/"/>
+    <updated>2008-10-27T10:36:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2008/10/27/ha-linux-router</id>
+    <content type="html"><![CDATA[<p>This howto describes the setup of a HA Linux router based on Gentoo and Keepalived. I&rsquo;m writing this because there&rsquo;s not really a good documentation on this topic so far. At least as i searched for it.</p>
+
+<h3>Requirements</h3>
+
+<p>The intended router requires this config and tools:</p>
+
+<ul>
+<li>Kernel with activcated VLAN support(CONFIG_VLAN_8021Q=y)</li>
+<li>Keepalived installed</li>
+<li>vconfig installed</li>
+<li>Optionally bonding support in Kernel and ifenslave installed</li>
+</ul>
+
+
+<h3>Network Configuration</h3>
+
+<p>This configuration example is designed for 8 NIC&rsquo;s and 20 VLAN&rsquo;s. The following config is split to make it more readable but belongs completely to /etc/conf.d/net.</p>
+
+<p><strong>VLAN-Interface-Mapping</strong></p>
+
+<p><em>Depending on your network and traffic you have to find a VLAN-interface-mapping that matches your environment.</em></p>
+
+<figure class='code'><figcaption><span>/etc/conf.d/net - part 1 </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#######################################################</span>
+</span><span class='line'><span class="c">## VLAN &lt;--&gt; Interface Mapping</span>
+</span><span class='line'><span class="c">#######################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## eth0: VLAN 20 - 22</span>
+</span><span class='line'><span class="nv">vlans_eth0</span><span class="o">=</span><span class="s2">&quot;20 21 22&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## eth1: VLAN 22</span>
+</span><span class='line'><span class="nv">vlans_eth1</span><span class="o">=</span><span class="s2">&quot;22&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## eth2: VLAN 23 - 24</span>
+</span><span class='line'><span class="nv">vlans_eth2</span><span class="o">=</span><span class="s2">&quot;23 24&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## eth3: VLAN 25 26 27 28</span>
+</span><span class='line'><span class="nv">vlans_eth3</span><span class="o">=</span><span class="s2">&quot;25 26 27 28&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## eth4: VLAN 29</span>
+</span><span class='line'><span class="nv">vlans_eth4</span><span class="o">=</span><span class="s2">&quot;29&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## eth5: VLAN 30 - 34</span>
+</span><span class='line'><span class="nv">vlans_eth5</span><span class="o">=</span><span class="s2">&quot;30 31 32 33 34&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## eth6: VLAN 35 - 38 </span>
+</span><span class='line'><span class="nv">vlans_eth6</span><span class="o">=</span><span class="s2">&quot;35 36 37 38&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## eth7: VLAN 39 - 40</span>
+</span><span class='line'><span class="nv">vlans_eth7</span><span class="o">=</span><span class="s2">&quot;39 40&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>VLAN Settings</strong></p>
+
+<p>This  VLAN setup will lead to interfaces named vlanXX. See the manpage of vconfig if you prefer a different setup. Then it&rsquo;s time to disable the &ldquo;parent interfaces&rdquo;. You can&rsquo;t use a interface in mixed mode: VLAN&rsquo;s <strong>or</strong> single interface.</p>
+
+<figure class='code'><figcaption><span>/etc/conf.d/net - part 2 </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#######################################################</span>
+</span><span class='line'><span class="c">## VLAN Interface naming scheme</span>
+</span><span class='line'><span class="c">#######################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">vconfig_eth0</span><span class="o">=(</span> <span class="s2">&quot;set_name_type VLAN_PLUS_VID_NO_PAD&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">vconfig_eth1</span><span class="o">=(</span> <span class="s2">&quot;set_name_type VLAN_PLUS_VID_NO_PAD&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">vconfig_eth2</span><span class="o">=(</span> <span class="s2">&quot;set_name_type VLAN_PLUS_VID_NO_PAD&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">vconfig_eth3</span><span class="o">=(</span> <span class="s2">&quot;set_name_type VLAN_PLUS_VID_NO_PAD&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">vconfig_eth4</span><span class="o">=(</span> <span class="s2">&quot;set_name_type VLAN_PLUS_VID_NO_PAD&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">vconfig_eth5</span><span class="o">=(</span> <span class="s2">&quot;set_name_type VLAN_PLUS_VID_NO_PAD&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">vconfig_eth6</span><span class="o">=(</span> <span class="s2">&quot;set_name_type VLAN_PLUS_VID_NO_PAD&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">vconfig_eth7</span><span class="o">=(</span> <span class="s2">&quot;set_name_type VLAN_PLUS_VID_NO_PAD&quot;</span> <span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#######################################################</span>
+</span><span class='line'><span class="c">## Disable interfaces for &quot;normal&quot; use</span>
+</span><span class='line'><span class="c">#######################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">config_eth0</span><span class="o">=(</span> <span class="s2">&quot;null&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_eth1</span><span class="o">=(</span> <span class="s2">&quot;null&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_eth2</span><span class="o">=(</span> <span class="s2">&quot;null&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_eth3</span><span class="o">=(</span> <span class="s2">&quot;null&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_eth4</span><span class="o">=(</span> <span class="s2">&quot;null&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_eth5</span><span class="o">=(</span> <span class="s2">&quot;null&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_eth6</span><span class="o">=(</span> <span class="s2">&quot;null&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_eth7</span><span class="o">=(</span> <span class="s2">&quot;null&quot;</span> <span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>IP Adresses</strong></p>
+
+<p>Now it&rsquo;s time to assign addresses to our VLAN interfaces. I myself prefer the last 3 adresses of every subnet as router addresses.</p>
+
+<figure class='code'><figcaption><span>/etc/conf.d/net - part 3 </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-
+</span><span class='line'>-            192.168.45.0/25
+</span><span class='line'>-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-
+</span><span class='line'>- Router-VIP  <span class="o">==</span>&gt; 192.168.45.254 Cluster IP
+</span><span class='line'>- Router-A    <span class="o">==</span>&gt; 192.168.45.253 Real-IP Node A
+</span><span class='line'>- Router-B    <span class="o">==</span>&gt; 192.168.45.252 Real-IP Node B
+</span><span class='line'>
+</span><span class='line'><span class="nv">config_vlan20</span><span class="o">=(</span> <span class="s2">&quot;10.1.20.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan21</span><span class="o">=(</span> <span class="s2">&quot;10.1.21.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan22</span><span class="o">=(</span> <span class="s2">&quot;10.1.22.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan23</span><span class="o">=(</span> <span class="s2">&quot;10.1.23.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan24</span><span class="o">=(</span> <span class="s2">&quot;10.1.24.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan25</span><span class="o">=(</span> <span class="s2">&quot;10.1.25.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan26</span><span class="o">=(</span> <span class="s2">&quot;10.1.26.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan27</span><span class="o">=(</span> <span class="s2">&quot;10.1.27.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan28</span><span class="o">=(</span> <span class="s2">&quot;10.1.28.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan29</span><span class="o">=(</span> <span class="s2">&quot;10.1.29.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'><span class="nv">config_vlan30</span><span class="o">=(</span> <span class="s2">&quot;10.1.30.0/24&quot;</span> <span class="o">)</span>
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Routing</strong></p>
+
+<p>If you&rsquo;re familiar with Gentoo&rsquo;s routing syntax you shouldn&rsquo;t be surprised to see how it works.</p>
+
+<figure class='code'><figcaption><span>/etc/conf.d/net - part 4 </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">routes_vlan21</span><span class="o">=(</span><span class="s2">&quot;192.168.99.0/27 via 10.1.21.5&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="nv">routes_vlan31</span><span class="o">=(</span><span class="s2">&quot;default via 10.1.31.1&quot;</span><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Keepalived Configuration</h3>
+
+<figure class='code'><figcaption><span>/etc/keepalived/keepalived.conf - MASTER </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">## Unique identifier for every router</span>
+</span><span class='line'>global_defs <span class="o">{</span>
+</span><span class='line'>   router_id router-a
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## Sync Group</span>
+</span><span class='line'>vrrp_sync_group SG_A <span class="o">{</span>
+</span><span class='line'>  group <span class="o">{</span>
+</span><span class='line'>          VI_21 <span class="c"># VLAN 21</span>
+</span><span class='line'>          VI_22 <span class="c"># VLAN 22</span>
+</span><span class='line'>          VI_23 <span class="c"># VLAN 23</span>
+</span><span class='line'>          VI_24 <span class="c"># VLAN 24</span>
+</span><span class='line'>          VI_25 <span class="c"># VLAN 25</span>
+</span><span class='line'>          VI_26 <span class="c"># VLAN 26</span>
+</span><span class='line'>          VI_27 <span class="c"># VLAN 27</span>
+</span><span class='line'>          VI_28 <span class="c"># VLAN 28</span>
+</span><span class='line'>          VI_29 <span class="c"># VLAN 29</span>
+</span><span class='line'>          VI_30 <span class="c"># VLAN 30</span>
+</span><span class='line'>          VI_31 <span class="c"># VLAN 31</span>
+</span><span class='line'>
+</span><span class='line'>          ...
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## VLAN 21</span>
+</span><span class='line'>vrrp_instance VI_21 <span class="o">{</span>
+</span><span class='line'>    interface vlan21
+</span><span class='line'>    state MASTER
+</span><span class='line'>    virtual_router_id 21
+</span><span class='line'>    priority 80
+</span><span class='line'>    advert_int 1
+</span><span class='line'>    authentication <span class="o">{</span>
+</span><span class='line'>        auth_type PASS
+</span><span class='line'>        auth_pass &gt;FreakShow_&lt;
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    virtual_ipaddress <span class="o">{</span>
+</span><span class='line'>        10.1.21.254
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## VLAN 22</span>
+</span><span class='line'>vrrp_instance VI_22 <span class="o">{</span>
+</span><span class='line'>    interface vlan22
+</span><span class='line'>    state MASTER
+</span><span class='line'>    virtual_router_id 22
+</span><span class='line'>    priority 80
+</span><span class='line'>    advert_int 1
+</span><span class='line'>    authentication <span class="o">{</span>
+</span><span class='line'>        auth_type PASS
+</span><span class='line'>        auth_pass &gt;FreakShow_&lt;
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    virtual_ipaddress <span class="o">{</span>
+</span><span class='line'>        10.1.22.254
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>/etc/keepalived/keepalived.conf - SLAVE </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">## Unique identifier for every router</span>
+</span><span class='line'>global_defs <span class="o">{</span>
+</span><span class='line'>   router_id router-b
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## Sync Group</span>
+</span><span class='line'>vrrp_sync_group SG_B <span class="o">{</span>
+</span><span class='line'>  group <span class="o">{</span>
+</span><span class='line'>          VI_21 <span class="c"># VLAN 21</span>
+</span><span class='line'>          VI_22 <span class="c"># VLAN 22</span>
+</span><span class='line'>          VI_23 <span class="c"># VLAN 23</span>
+</span><span class='line'>          VI_24 <span class="c"># VLAN 24</span>
+</span><span class='line'>          VI_25 <span class="c"># VLAN 25</span>
+</span><span class='line'>          VI_26 <span class="c"># VLAN 26</span>
+</span><span class='line'>          VI_27 <span class="c"># VLAN 27</span>
+</span><span class='line'>          VI_28 <span class="c"># VLAN 28</span>
+</span><span class='line'>          VI_29 <span class="c"># VLAN 29</span>
+</span><span class='line'>          VI_30 <span class="c"># VLAN 30</span>
+</span><span class='line'>          VI_31 <span class="c"># VLAN 31</span>
+</span><span class='line'>
+</span><span class='line'>          ...
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## VLAN 21</span>
+</span><span class='line'>vrrp_instance VI_21 <span class="o">{</span>
+</span><span class='line'>    interface vlan21
+</span><span class='line'>    state SLAVE
+</span><span class='line'>    virtual_router_id 21
+</span><span class='line'>    priority 50
+</span><span class='line'>    advert_int 1
+</span><span class='line'>    authentication <span class="o">{</span>
+</span><span class='line'>        auth_type PASS
+</span><span class='line'>        auth_pass &gt;FreakShow_&lt;
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    virtual_ipaddress <span class="o">{</span>
+</span><span class='line'>        10.1.21.254
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## VLAN 22</span>
+</span><span class='line'>vrrp_instance VI_22 <span class="o">{</span>
+</span><span class='line'>    interface vlan22
+</span><span class='line'>    state SLAVE
+</span><span class='line'>    virtual_router_id 22
+</span><span class='line'>    priority 50
+</span><span class='line'>    advert_int 1
+</span><span class='line'>    authentication <span class="o">{</span>
+</span><span class='line'>        auth_type PASS
+</span><span class='line'>        auth_pass &gt;FreakShow_&lt;
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    virtual_ipaddress <span class="o">{</span>
+</span><span class='line'>        10.1.22.254
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+]]></content>
+  </entry>
+  
+</feed>

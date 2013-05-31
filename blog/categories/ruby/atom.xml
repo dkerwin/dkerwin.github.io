@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ruby | linuxaddicted.de]]></title>
+  <link href="http://dkerwin.github.io/blog/categories/ruby/atom.xml" rel="self"/>
+  <link href="http://dkerwin.github.io/"/>
+  <updated>2013-05-31T18:27:46+02:00</updated>
+  <id>http://dkerwin.github.io/</id>
+  <author>
+    <name><![CDATA[Daniel Kerwin]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[puppetmasterd and passenger]]></title>
+    <link href="http://dkerwin.github.io/blog/2010/03/18/puppetmasterd-and-passenger/"/>
+    <updated>2010-03-18T19:30:00+01:00</updated>
+    <id>http://dkerwin.github.io/blog/2010/03/18/puppetmasterd-and-passenger</id>
+    <content type="html"><![CDATA[<p>It seems like some people have trouble configuring/undestanding how to combine puppetmasterd and Passenger (aka mod_rails). Let&rsquo;s get it on:</p>
+
+<h2>Install depencies</h2>
+
+<p>You need the following components on your puppetmaster server:</p>
+
+<ul>
+<li>Phusion Passenger (<a href="http://modrails.com/">http://modrails.com</a>)</li>
+<li>Rack (<a href="http://rubyforge.org/projects/rack">http://rubyforge.org/projects/rack</a>)</li>
+</ul>
+
+
+<h2>Configure puppetmaster</h2>
+
+<p>Your puppet package should contain a config.ru. I found mine in /usr/share/doc/puppet-0.25.4-r1/ext/rack/files/config.ru.bz2 (Gentoo).</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mkdir /etc/puppet/rack
+</span><span class='line'>mkdir /etc/puppet/rack/public
+</span><span class='line'>cp <span class="o">[</span>YOUR_CONFIG.RU<span class="o">]</span> /etc/puppet/rack
+</span><span class='line'>chown puppet:root /etc/puppet/rack/config.ru
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!--more-->
+
+
+<p>The final chown line is important! This way rack determines under which user to run the puppetmaster processes.</p>
+
+<p>Add the following lines to your puppet.conf:
+<div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>puppetmasterd<span class="o">]</span>
+</span><span class='line'>&amp;hellip;
+</span><span class='line'><span class="nv">ssl_client_header</span> <span class="o">=</span> SSL_CLIENT_S_DN
+</span><span class='line'><span class="nv">ssl_client_verify_header</span> <span class="o">=</span> SSL_CLIENT_VERIFY
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2>Apache config</h2>
+
+<p>You can keep your passenger config as is and modify it when required. Here&rsquo;s a example vhost config:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+</pre></td><td class='code'><pre><code class='apache'><span class='line'><span class="nb">Listen</span> <span class="m">8140</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;&lt;VirtualHost</span> <span class="s">*:8140</span><span class="nt">&gt;&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="nb">ServerName</span> puppet
+</span><span class='line'><span class="nb">DocumentRoot</span> <span class="sx">/etc/puppet/rack/public/</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">CustomLog</span> <span class="s2">&quot;|/usr/sbin/rotatelogs /var/www/puppet/logs/access_log.%Y%m%d-%H%M 86400&quot;</span> common
+</span><span class='line'><span class="nb">ErrorLog</span>  <span class="s2">&quot;|/usr/sbin/rotatelogs /var/www/puppet/logs/error_log.%Y%m%d-%H%M 86400&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">PassengerHighPerformance</span> <span class="k">on</span>
+</span><span class='line'><span class="nb">PassengerMaxPoolSize</span> <span class="m">15</span>
+</span><span class='line'><span class="nb">PassengerPoolIdleTime</span> <span class="m">300</span>
+</span><span class='line'><span class="nb">PassengerUseGlobalQueue</span> <span class="k">on</span>
+</span><span class='line'><span class="nb">PassengerStatThrottleRate</span> <span class="m">120</span>
+</span><span class='line'><span class="nb">RackAutoDetect</span> <span class="k">Off</span>
+</span><span class='line'><span class="nb">RailsAutoDetect</span> <span class="k">Off</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">RackBaseURI</span> /
+</span><span class='line'>
+</span><span class='line'><span class="nb">SSLEngine</span> <span class="k">on</span>
+</span><span class='line'><span class="nb">SSLProtocol</span> -ALL +SSLv3 +TLSv1
+</span><span class='line'><span class="nb">SSLCipherSuite</span> <span class="k">ALL</span>:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP
+</span><span class='line'><span class="nb">SSLCertificateFile</span> <span class="sx">/var/lib/puppet/ssl/certs/XXXXXXXXXXXX.pem</span>
+</span><span class='line'><span class="nb">SSLCertificateKeyFile</span> <span class="sx">/var/lib/puppet/ssl/private_keys/XXXXXXXXXXXX.pem</span>
+</span><span class='line'><span class="nb">SSLCertificateChainFile</span> <span class="sx">/var/lib/puppet/ssl/ca/ca_crt.pem</span>
+</span><span class='line'><span class="nb">SSLCACertificateFile</span> <span class="sx">/var/lib/puppet/ssl/ca/ca_crt.pem</span>
+</span><span class='line'><span class="nb">SSLCARevocationFile</span> <span class="sx">/var/lib/puppet/ssl/ca/ca_crl.pem</span>
+</span><span class='line'><span class="nb">SSLVerifyClient</span> optional
+</span><span class='line'><span class="nb">SSLVerifyDepth</span> <span class="m">1</span>
+</span><span class='line'><span class="nb">SSLOptions</span> +StdEnvVars
+</span><span class='line'>
+</span><span class='line'><span class="err">&amp;lt;</span><span class="nb">Directory</span> <span class="s2">&quot;/etc/puppet/rack/public/&quot;</span>&amp;gt;
+</span><span class='line'>    <span class="nb">Options</span> <span class="k">None</span>
+</span><span class='line'>    <span class="nb">AllowOverride</span> <span class="k">None</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nb">Order</span> allow,deny
+</span><span class='line'>    <span class="nb">Allow</span> from <span class="k">all</span>
+</span><span class='line'><span class="err">&amp;lt;/Directory&amp;gt;</span>
+</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;&lt;/Virtualhost&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Restart apache and when clients connect are are triggered via puppetrun you may see something like this with passenger-status:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;passenger-status&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;ndash; General information &amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;ndash;
+</span><span class='line'><span class="nv">max</span>      <span class="o">=</span> 20
+</span><span class='line'><span class="nv">count</span>    <span class="o">=</span> 9
+</span><span class='line'><span class="nv">active</span>   <span class="o">=</span> 0
+</span><span class='line'><span class="nv">inactive</span> <span class="o">=</span> 9
+</span><span class='line'>Waiting on global queue: 0&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;ndash; Domains &amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;ndash;
+</span><span class='line'>/etc/puppet/rack:
+</span><span class='line'>  PID: 19160   Sessions: 0    Processed: 39      Uptime: 20s
+</span><span class='line'>  PID: 19202   Sessions: 0    Processed: 70      Uptime: 17s
+</span><span class='line'>  PID: 18934   Sessions: 0    Processed: 95      Uptime: 45s
+</span><span class='line'>  PID: 18977   Sessions: 0    Processed: 66      Uptime: 42s
+</span><span class='line'>  PID: 19008   Sessions: 0    Processed: 63      Uptime: 40s
+</span><span class='line'>  PID: 19184   Sessions: 0    Processed: 2       Uptime: 19s
+</span><span class='line'>  PID: 19103   Sessions: 0    Processed: 8       Uptime: 28s&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;/var/www/puppet-dashboard/htdocs:
+</span><span class='line'>  PID: 19158   Sessions: 0    Processed: 6       Uptime: 22s
+</span><span class='line'>  PID: 19236   Sessions: 0    Processed: 3       Uptime: 10s
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Also refer to the offical puppet documentation on passenger <a href="http://docs.puppetlabs.com/guides/passenger.html">here</a></a>.</p>
+
+<p>That&rsquo;s it.</p>
+]]></content>
+  </entry>
+  
+</feed>
