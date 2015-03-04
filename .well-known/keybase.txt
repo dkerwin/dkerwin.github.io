@@ -1,0 +1,77 @@
+==================================================================
+https://keybase.io/dkerwin
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://www.linuxaddicted.de
+  * I am dkerwin (https://keybase.io/dkerwin) on keybase.
+  * I have a public key with fingerprint EBD4 EB16 AC68 41AF 2BB4  5D60 C1C2 C5CB CDFC 30A5
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "client": {
+            "name": "keybase.io node.js client",
+            "version": "0.7.7"
+        },
+        "key": {
+            "fingerprint": "ebd4eb16ac6841af2bb45d60c1c2c5cbcdfc30a5",
+            "host": "keybase.io",
+            "key_id": "C1C2C5CBCDFC30A5",
+            "uid": "b9aba6afcb82a09b7e0b06a240398b19",
+            "username": "dkerwin"
+        },
+        "merkle_root": {
+            "ctime": 1425467183,
+            "hash": "93fbea40d32c1d6d0f238193d1a426860011a017575fdbac55b0d6b3794be737a4b47af2ed87e75b9c3351ef3a8934c001012c274bdc0ecb17d8f776b5946a08",
+            "seqno": 171124
+        },
+        "service": {
+            "hostname": "www.linuxaddicted.de",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1425467393,
+    "expire_in": 157680000,
+    "prev": "3c2eb01b3270c43958494808ae31257c41fa4f1f7689a18b54bb9d1f4f348202",
+    "seqno": 3,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: GnuPG v2
+Comment: GPGTools - http://gpgtools.org
+
+owFVkm9oVlUcx5+tFrpaDbdaDGnz9sZgPJy/99w7VjafmYS6SmeiZE/n392ue557
+H++927Pp1pvQrIGpRZg8YFBLKiIo3XCEkGmQmraF9aomRbTACKXEVi86dyzK8+qe
+cz/f7+/3/Z1zoO62THXVp6fPnv/ybzBedf4Xkem5MVe92xKhGrbad1uy4OsgSb8C
+XtRWu9WvhwWPddYPW4NQ6eyOuHWRabMGdRT7YWAokGVZZo22pXgq9vygV0elyE+9
+LC0U0QLaXNoOgdxDQhCqbCChRJJKIZUnMeDUWPaFcXJLVWvBM+8rc5qDOZSjudW5
+rsdyGHSm/MDCD+FywW3uSeEgDlzBNBDA5ogA7DoCuikY62gxkurXUdkP0naLOuov
+6HwUhguZZeKnBCSIEptBB5uGeNxnNC72hOYEKIwkVLYCHsIOdLGCnCDbsQGAkAPI
+KKOeElxSKoCyBWYuEZphxokgzCTXymGaUeFKjCnUHuaOi4k0cgCRRIwIJYGWAjLl
+eIzZgrrE5sAxCWK9MwhNcwxCREbTfTToS532nU5tMVy5XM4W/GBgiCvly0SrrNJG
+XIrCJJRhwRB9SVJqT8MnwyV9PJVokV80yws/UObu/n+50KC3Dga7ZjB6qORHOu+n
+BGW2A8xK6+hBY4kl0gJAgREDkmCXOsQlDnC4xhBRJgn0OPGgZ3Quh46gRAhXQY94
+mDgIoP/imkoJ7zWWsd8b8GQg0tboS1XLb89UVWfuqKlOX2+mdmn9v0/6bPeSzGvz
+dZNxy/QXzy3tenl90/S2oPLMoZn1HXd15xpvfHBRHD/Q1DzxUO2Gw8suzqwc+fij
+t37Yt7mGbuV/nRqfmb36YcPJPW9PLF/98KtHVwlv6vNHm+feue/BoGnLN/Pnfj1Y
+6WhquDyx69rN7s96xk7XbNrU+fxvh9e0NLTeLOwZ6WlZ8ca7x9Z+/TjLnJm91NV5
+5efptq3zr58q3nvk+mTvyAs/VYp7Z9985Ykd190Hjslh9bQ8sa753D1X77+8fcPd
+F36vbP+kq/FoWJz7cd2qnqk/75ysdFzb+ezYxo37vz3z1fsv1n/X5j618vtgxf59
+Y3K87mBu19rabVPv7b00dIgMXFnzR+PJJ8uPkPrN0xf+AQ==
+=fROD
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/dkerwin
+
+==================================================================
